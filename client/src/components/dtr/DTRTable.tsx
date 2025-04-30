@@ -13,6 +13,7 @@ import { Eye, MoreVertical, CheckCircle, XCircle, Edit, CreditCard } from "lucid
 import { DTR, Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Tooltip } from "@/components/ui/tooltip";
 
 type DTRTableProps = {
   dtrs?: DTR[];
@@ -214,38 +215,54 @@ const DTRTable = ({ dtrs = [], isLoading, employees = [] }: DTRTableProps) => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
+                        <Tooltip content="DTR Actions">
+                          <Button variant="ghost" size="icon" className="hover:bg-gray-100 transition-colors">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </Tooltip>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleViewDTR(dtr.id)}>
+                        <DropdownMenuItem 
+                          onClick={() => handleViewDTR(dtr.id)}
+                          className="hover:bg-gray-100 cursor-pointer"
+                        >
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
                         {dtr.status === "Pending" && (
                           <>
-                            <DropdownMenuItem onClick={() => handleApproveDTR(dtr.id)}>
+                            <DropdownMenuItem 
+                              onClick={() => handleApproveDTR(dtr.id)}
+                              className="hover:bg-green-50 cursor-pointer"
+                            >
                               <CheckCircle className="mr-2 h-4 w-4 text-success" />
                               Approve
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleRejectDTR(dtr.id)}>
+                            <DropdownMenuItem 
+                              onClick={() => handleRejectDTR(dtr.id)}
+                              className="hover:bg-red-50 cursor-pointer"
+                            >
                               <XCircle className="mr-2 h-4 w-4 text-error" />
                               Reject
                             </DropdownMenuItem>
                           </>
                         )}
                         {dtr.status === "Approved" && (
-                          <DropdownMenuItem onClick={() => handleProcessPayroll(dtr.id)}>
+                          <DropdownMenuItem 
+                            onClick={() => handleProcessPayroll(dtr.id)}
+                            className="hover:bg-blue-50 cursor-pointer"
+                          >
                             <CreditCard className="mr-2 h-4 w-4 text-primary" />
                             Process Payroll
                           </DropdownMenuItem>
                         )}
                         {dtr.status === "Rejected" && (
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="hover:bg-yellow-50 cursor-pointer"
+                          >
                             <Edit className="mr-2 h-4 w-4 text-warning" />
                             Request Revision
                           </DropdownMenuItem>

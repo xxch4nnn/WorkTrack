@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const QuickActions = () => {
   const { toast } = useToast();
@@ -132,14 +133,17 @@ const QuickActions = () => {
     <Card>
       <CardHeader className="py-5 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowCustomizeDialog(true)}
-        >
-          <Edit className="h-4 w-4 mr-1" />
-          Customize
-        </Button>
+        <Tooltip content="Customize your quick action shortcuts">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCustomizeDialog(true)}
+            className="hover:bg-gray-100 transition-colors"
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            Customize
+          </Button>
+        </Tooltip>
       </CardHeader>
       <CardContent className="px-4 py-5 sm:p-6">
         <div className="space-y-3">
@@ -159,7 +163,8 @@ const QuickActions = () => {
               <Link key={index} href={action.href}>
                 <button
                   type="button"
-                  className="w-full inline-flex justify-between items-center px-4 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                  className="w-full inline-flex justify-between items-center px-4 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 hover:border-primary/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                  aria-label={action.label}
                 >
                   <div className="flex items-center">
                     {action.icon}
@@ -172,7 +177,7 @@ const QuickActions = () => {
                   ) : (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-400"
+                      className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
