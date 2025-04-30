@@ -58,10 +58,10 @@ const EmployeeList = ({ employees = [], isLoading }: EmployeeListProps) => {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-auto">
       <div className="w-full">
         <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Employee
