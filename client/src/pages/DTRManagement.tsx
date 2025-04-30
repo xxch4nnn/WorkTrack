@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DTRTable from "@/components/dtr/DTRTable";
 import DTRForm from "@/components/dtr/DTRForm";
-import { Plus, Search, Filter } from "lucide-react";
+import DTRCapture from "@/components/dtr/DTRCapture";
+import { Plus, Search, Filter, Camera, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const DTRManagement = () => {
   const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(location.split("?")[1]);
   
-  const [isAddingDTR, setIsAddingDTR] = useState(false);
+  const [addMode, setAddMode] = useState<"form" | "capture" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("status") || "all");
   const [dtrType, setDtrType] = useState("all");
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: dtrs, isLoading } = useQuery({
     queryKey: ['/api/dtrs'],
@@ -55,6 +60,55 @@ const DTRManagement = () => {
     newSearchParams.set("status", value);
     setLocation(`/dtr-management?${newSearchParams.toString()}`, { replace: true });
   };
+  
+  const handleDTRCaptureSuccess = (data: any) => {
+    // Refresh DTR list after successful submission
+    queryClient.invalidateQueries({ queryKey: ['/api/dtrs'] });
+    setAddMode(null);
+    
+    toast({
+      title: "DTR Processed Successfully",
+      description: "The DTR has been automatically extracted and submitted.",
+    });
+  };
+  
+  const handleDTRCaptureError = (error: string) => {
+    toast({
+      title: "DTR Processing Error",
+      description: error,
+      variant: "destructive"
+    });
+  };
+
+  const renderAddDTROptions = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="p-6 cursor-pointer hover:shadow-md transition-shadow" 
+        onClick={() => setAddMode("form")}>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+            <Plus className="h-8 w-8" />
+          </div>
+          <h3 className="font-medium mb-2">Manual Entry</h3>
+          <p className="text-sm text-gray-500">
+            Manually enter DTR details using a form
+          </p>
+        </div>
+      </Card>
+      
+      <Card className="p-6 cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => setAddMode("capture")}>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4">
+            <Camera className="h-8 w-8" />
+          </div>
+          <h3 className="font-medium mb-2">Auto Capture</h3>
+          <p className="text-sm text-gray-500">
+            Upload or take a photo of a DTR for automatic processing
+          </p>
+        </div>
+      </Card>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -64,29 +118,40 @@ const DTRManagement = () => {
             DTR Management
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Manage daily time records for all employees.
+            Manage daily time records for all employees with automatic processing.
           </p>
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
-          <Button onClick={() => setIsAddingDTR(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add DTR
-          </Button>
+          {!addMode && (
+            <Button onClick={() => setAddMode("form")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add DTR
+            </Button>
+          )}
         </div>
       </div>
 
-      {isAddingDTR ? (
+      {addMode === "form" ? (
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Add New DTR</h3>
           <DTRForm
             employees={employees}
             isLoading={isEmployeesLoading}
-            onCancel={() => setIsAddingDTR(false)}
-            onSubmit={() => setIsAddingDTR(false)}
+            onCancel={() => setAddMode(null)}
+            onSubmit={() => setAddMode(null)}
           />
         </Card>
-      ) : (
+      ) : addMode === "capture" ? (
+        <DTRCapture
+          onSuccess={handleDTRCaptureSuccess}
+          onError={handleDTRCaptureError}
+          onCancel={() => setAddMode(null)}
+        />
+      ) : addMode === null ? (
         <>
+          <div className="mb-8">
+            {renderAddDTROptions()}
+          </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 md:space-x-2 mb-4">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -132,7 +197,7 @@ const DTRManagement = () => {
             employees={employees}
           />
         </>
-      )}
+      ) : null}
     </div>
   );
 };
