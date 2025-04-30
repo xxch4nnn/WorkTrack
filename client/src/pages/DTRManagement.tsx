@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DTRTable from "@/components/dtr/DTRTable";
 import DTRForm from "@/components/dtr/DTRForm";
 import DTRCapture from "@/components/dtr/DTRCapture";
-import { Plus, Search, Filter, Camera, Upload } from "lucide-react";
+import { Plus, Search, Filter, Camera, Upload, Check, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const DTRManagement = () => {
@@ -20,6 +20,8 @@ const DTRManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("status") || "all");
   const [dtrType, setDtrType] = useState("all");
+  const [selectedDTRs, setSelectedDTRs] = useState<number[]>([]);
+  const [enableBulkActions, setEnableBulkActions] = useState(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -79,6 +81,10 @@ const DTRManagement = () => {
       variant: "destructive"
     });
   };
+  
+  const handleDTRSelection = (selectedIds: number[]) => {
+    setSelectedDTRs(selectedIds);
+  };
 
   const renderAddDTROptions = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -121,12 +127,36 @@ const DTRManagement = () => {
             Manage daily time records for all employees with automatic processing.
           </p>
         </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
+        <div className="mt-4 flex md:mt-0 md:ml-4 space-x-2">
           {!addMode && (
-            <Button onClick={() => setAddMode("form")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add DTR
-            </Button>
+            <>
+              <Button onClick={() => setAddMode("form")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add DTR
+              </Button>
+              
+              <Button 
+                variant={enableBulkActions ? "default" : "outline"} 
+                onClick={() => {
+                  setEnableBulkActions(!enableBulkActions);
+                  if (enableBulkActions) {
+                    setSelectedDTRs([]);
+                  }
+                }}
+              >
+                {enableBulkActions ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Exit Bulk Mode
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Bulk Process
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
       </div>
