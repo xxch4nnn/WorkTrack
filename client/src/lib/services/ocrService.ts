@@ -14,6 +14,7 @@ export interface ParsedDTRData {
   companyId?: number;
   confidence: number;
   needsReview: boolean;
+  isNewFormat?: boolean;
   rawText: string;
 }
 

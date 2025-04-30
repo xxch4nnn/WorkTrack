@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Camera, X, Loader2 } from 'lucide-react';
+import Webcam from 'react-webcam';
+import { Upload, Camera, X, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import WebcamCapture from './WebcamCapture';
 import { processDTRImage, ParsedDTRData } from '@/lib/services/ocrService';
 
 interface DTRUploadProps {
@@ -146,7 +146,46 @@ const DTRUpload = ({ onProcessed, onCancel }: DTRUploadProps) => {
           </TabsContent>
           
           <TabsContent value="camera">
-            <WebcamCapture onCapture={handleCaptureComplete} />
+            <div className="space-y-4">
+              <div className="rounded-md overflow-hidden bg-black">
+                <Webcam
+                  audio={false}
+                  ref={webcamRef => {
+                    if (webcamRef) {
+                      // Store webcam ref in state or use it directly
+                      (window as any).webcamRef = webcamRef;
+                    }
+                  }}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={{
+                    width: 720,
+                    height: 480,
+                    facingMode: "environment"
+                  }}
+                  className="w-full"
+                />
+                <div className="bg-black p-2 flex justify-center">
+                  <Button 
+                    onClick={() => {
+                      const webcamRef = (window as any).webcamRef;
+                      if (webcamRef) {
+                        const imageSrc = webcamRef.getScreenshot();
+                        if (imageSrc) {
+                          handleCaptureComplete(imageSrc);
+                        }
+                      }
+                    }} 
+                    className="bg-white text-black hover:bg-gray-200"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    Capture
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                Position the DTR document clearly in frame and ensure good lighting.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       ) : (
