@@ -147,31 +147,31 @@ const DTRTable = ({
     switch (status) {
       case "Pending":
         return (
-          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
+          <span className="px-2 py-1 inline-flex text-fit-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
             Pending
           </span>
         );
       case "Approved":
         return (
-          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+          <span className="px-2 py-1 inline-flex text-fit-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
             Approved
           </span>
         );
       case "Rejected":
         return (
-          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+          <span className="px-2 py-1 inline-flex text-fit-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
             Rejected
           </span>
         );
       case "Processing":
         return (
-          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+          <span className="px-2 py-1 inline-flex text-fit-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
             Processing
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+          <span className="px-2 py-1 inline-flex text-fit-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
             {status}
           </span>
         );
@@ -288,26 +288,26 @@ const DTRTable = ({
       <AlertDialog open={showBulkApproveAlert} onOpenChange={setShowBulkApproveAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Approve Multiple DTRs</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-fit">Approve Multiple DTRs</AlertDialogTitle>
+            <AlertDialogDescription className="text-fit-sm">
               Are you sure you want to approve {selectedDTRs.length} DTR{selectedDTRs.length !== 1 ? 's' : ''}? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isBulkProcessing}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isBulkProcessing} className="text-fit-sm">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleBulkApprove}
               disabled={isBulkProcessing}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-fit-sm"
             >
               {isBulkProcessing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
+                  <span className="truncate-dynamic">Processing...</span>
                 </>
               ) : (
-                <>Approve</>
+                <><span className="truncate-dynamic">Approve</span></>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -317,8 +317,8 @@ const DTRTable = ({
       <AlertDialog open={showBulkRejectAlert} onOpenChange={setShowBulkRejectAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject Multiple DTRs</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-fit">Reject Multiple DTRs</AlertDialogTitle>
+            <AlertDialogDescription className="text-fit-sm">
               Are you sure you want to reject {selectedDTRs.length} DTR{selectedDTRs.length !== 1 ? 's' : ''}? 
               This action cannot be undone.
             </AlertDialogDescription>
@@ -346,8 +346,8 @@ const DTRTable = ({
       <AlertDialog open={showBulkPayrollAlert} onOpenChange={setShowBulkPayrollAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Process Payroll for Multiple DTRs</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-fit">Process Payroll for Multiple DTRs</AlertDialogTitle>
+            <AlertDialogDescription className="text-fit-sm">
               Are you sure you want to process payroll for {selectedDTRs.length} DTR{selectedDTRs.length !== 1 ? 's' : ''}? 
               This will create payroll records for all selected DTRs.
             </AlertDialogDescription>
@@ -382,11 +382,11 @@ const DTRTable = ({
                 checked={isAllSelected} 
                 onCheckedChange={handleSelectAll} 
               />
-              <label htmlFor="select-all" className="text-sm font-medium text-gray-700">
+              <label htmlFor="select-all" className="text-fit-sm font-medium text-gray-700">
                 Select All
               </label>
               {selectedDTRs.length > 0 && (
-                <span className="text-sm text-gray-600 ml-2">
+                <span className="text-fit-sm text-gray-600 ml-2">
                   ({selectedDTRs.length} selected)
                 </span>
               )}
@@ -447,25 +447,25 @@ const DTRTable = ({
                   <span className="sr-only">Select</span>
                 </th>
               )}
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Employee
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Time
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Hours
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -551,48 +551,48 @@ const DTRTable = ({
                         </Tooltip>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel className="text-fit-sm">Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => handleViewDTR(dtr.id)}
-                          className="hover:bg-gray-100 cursor-pointer"
+                          className="hover:bg-gray-100 cursor-pointer text-fit-sm"
                         >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
+                          <Eye className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate-dynamic">View Details</span>
                         </DropdownMenuItem>
                         {dtr.status === "Pending" && (
                           <>
                             <DropdownMenuItem 
                               onClick={() => handleApproveDTR(dtr.id)}
-                              className="hover:bg-green-50 cursor-pointer"
+                              className="hover:bg-green-50 cursor-pointer text-fit-sm"
                             >
-                              <CheckCircle className="mr-2 h-4 w-4 text-success" />
-                              Approve
+                              <CheckCircle className="mr-2 h-4 w-4 text-success flex-shrink-0" />
+                              <span className="truncate-dynamic">Approve</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleRejectDTR(dtr.id)}
-                              className="hover:bg-red-50 cursor-pointer"
+                              className="hover:bg-red-50 cursor-pointer text-fit-sm"
                             >
-                              <XCircle className="mr-2 h-4 w-4 text-error" />
-                              Reject
+                              <XCircle className="mr-2 h-4 w-4 text-error flex-shrink-0" />
+                              <span className="truncate-dynamic">Reject</span>
                             </DropdownMenuItem>
                           </>
                         )}
                         {dtr.status === "Approved" && (
                           <DropdownMenuItem 
                             onClick={() => handleProcessPayroll(dtr.id)}
-                            className="hover:bg-blue-50 cursor-pointer"
+                            className="hover:bg-blue-50 cursor-pointer text-fit-sm"
                           >
-                            <CreditCard className="mr-2 h-4 w-4 text-primary" />
-                            Process Payroll
+                            <CreditCard className="mr-2 h-4 w-4 text-primary flex-shrink-0" />
+                            <span className="truncate-dynamic">Process Payroll</span>
                           </DropdownMenuItem>
                         )}
                         {dtr.status === "Rejected" && (
                           <DropdownMenuItem
-                            className="hover:bg-yellow-50 cursor-pointer"
+                            className="hover:bg-yellow-50 cursor-pointer text-fit-sm"
                           >
-                            <Edit className="mr-2 h-4 w-4 text-warning" />
-                            Request Revision
+                            <Edit className="mr-2 h-4 w-4 text-warning flex-shrink-0" />
+                            <span className="truncate-dynamic">Request Revision</span>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -604,7 +604,7 @@ const DTRTable = ({
               <tr>
                 <td
                   colSpan={enableBulkActions ? 8 : 7}
-                  className="px-6 py-4 text-center text-gray-500"
+                  className="px-6 py-4 text-center text-gray-500 text-fit-sm"
                 >
                   No DTR records found.
                 </td>
