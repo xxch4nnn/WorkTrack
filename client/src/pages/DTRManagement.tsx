@@ -225,6 +225,8 @@ const DTRManagement = () => {
             dtrs={filteredDTRs}
             isLoading={isLoading}
             employees={employees}
+            enableBulkActions={enableBulkActions}
+            onBulkSelect={handleDTRSelection}
           />
         </>
       ) : null}
