@@ -362,6 +362,10 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="dtrformats">
+          <DTRFormatManagement />
+        </TabsContent>
+
         <TabsContent value="payroll">
           <Card>
             <CardHeader>
