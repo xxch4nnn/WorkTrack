@@ -5,6 +5,8 @@ import {
   payrolls,
   users,
   activities,
+  dtrFormats,
+  unknownDtrFormats,
   type Employee,
   type InsertEmployee,
   type Company,
@@ -17,6 +19,10 @@ import {
   type InsertUser,
   type Activity,
   type InsertActivity,
+  type DtrFormat,
+  type InsertDtrFormat,
+  type UnknownDtrFormat,
+  type InsertUnknownDtrFormat,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -94,6 +100,8 @@ export class MemStorage implements IStorage {
   private payrolls: Map<number, Payroll>;
   private users: Map<number, User>;
   private activities: Map<number, Activity>;
+  private dtrFormats: Map<number, DtrFormat>;
+  private unknownDtrFormats: Map<number, UnknownDtrFormat>;
   
   currentEmployeeId: number;
   currentCompanyId: number;
@@ -101,6 +109,8 @@ export class MemStorage implements IStorage {
   currentPayrollId: number;
   currentUserId: number;
   currentActivityId: number;
+  currentDtrFormatId: number;
+  currentUnknownDtrFormatId: number;
 
   constructor() {
     this.employees = new Map();
@@ -109,6 +119,8 @@ export class MemStorage implements IStorage {
     this.payrolls = new Map();
     this.users = new Map();
     this.activities = new Map();
+    this.dtrFormats = new Map();
+    this.unknownDtrFormats = new Map();
     
     this.currentEmployeeId = 1;
     this.currentCompanyId = 1;
@@ -116,6 +128,8 @@ export class MemStorage implements IStorage {
     this.currentPayrollId = 1;
     this.currentUserId = 1;
     this.currentActivityId = 1;
+    this.currentDtrFormatId = 1;
+    this.currentUnknownDtrFormatId = 1;
     
     // Initialize with default data
     this.initializeDefaultData();
@@ -144,6 +158,33 @@ export class MemStorage implements IStorage {
         contactPhone: "+1 (555) 123-4567",
         status: "Active"
       });
+    });
+    
+    // Create sample DTR formats
+    this.createDtrFormat({
+      name: "Standard Timesheet",
+      companyId: 1,
+      pattern: String.raw`Employee\s*:?\s*(?<employeeName>[\w\s]+)[\s\S]*?Date\s*:?\s*(?<date>\d{2}[/-]\d{2}[/-]\d{4})[\s\S]*?Time In\s*:?\s*(?<timeIn>\d{1,2}:\d{2}\s*[AP]M)[\s\S]*?Time Out\s*:?\s*(?<timeOut>\d{1,2}:\d{2}\s*[AP]M)`,
+      extractionRules: {
+        employeeName: "employeeName",
+        date: "date",
+        timeIn: "timeIn",
+        timeOut: "timeOut"
+      },
+      example: "Employee: John Smith\nDate: 05/12/2023\nTime In: 8:30 AM\nTime Out: 5:30 PM"
+    });
+    
+    this.createDtrFormat({
+      name: "Compact DTR Format",
+      companyId: 2,
+      pattern: String.raw`ID#(?<employeeId>\d+)\s+(?<date>\d{2}[/-]\d{2}[/-]\d{4})\s+(?<timeIn>\d{1,2}:\d{2}[AP]M)-(?<timeOut>\d{1,2}:\d{2}[AP]M)`,
+      extractionRules: {
+        employeeId: "employeeId",
+        date: "date",
+        timeIn: "timeIn",
+        timeOut: "timeOut"
+      },
+      example: "ID#12345 06/15/2023 8:00AM-5:00PM"
     });
     
     // Create sample employees
@@ -481,10 +522,93 @@ export class MemStorage implements IStorage {
     this.currentActivityId = 1;
   }
 
+  // DTR Format operations
+  async getDtrFormat(id: number): Promise<DtrFormat | undefined> {
+    return this.dtrFormats.get(id);
+  }
+
+  async getAllDtrFormats(): Promise<DtrFormat[]> {
+    return Array.from(this.dtrFormats.values());
+  }
+
+  async createDtrFormat(format: InsertDtrFormat): Promise<DtrFormat> {
+    const id = this.currentDtrFormatId++;
+    const now = new Date();
+    const newFormat: DtrFormat = { 
+      ...format, 
+      id, 
+      isActive: true,
+      createdAt: now
+    };
+    this.dtrFormats.set(id, newFormat);
+    return newFormat;
+  }
+
+  async updateDtrFormat(id: number, data: Partial<DtrFormat>): Promise<DtrFormat | undefined> {
+    const format = this.dtrFormats.get(id);
+    if (!format) return undefined;
+    
+    const updatedFormat: DtrFormat = { ...format, ...data };
+    this.dtrFormats.set(id, updatedFormat);
+    return updatedFormat;
+  }
+
+  async deleteDtrFormat(id: number): Promise<boolean> {
+    return this.dtrFormats.delete(id);
+  }
+
+  // Unknown DTR Format operations
+  async getUnknownDtrFormat(id: number): Promise<UnknownDtrFormat | undefined> {
+    return this.unknownDtrFormats.get(id);
+  }
+
+  async getAllUnknownDtrFormats(): Promise<UnknownDtrFormat[]> {
+    return Array.from(this.unknownDtrFormats.values());
+  }
+
+  async createUnknownDtrFormat(format: InsertUnknownDtrFormat): Promise<UnknownDtrFormat> {
+    const id = this.currentUnknownDtrFormatId++;
+    const now = new Date();
+    const newFormat: UnknownDtrFormat = { 
+      ...format, 
+      id, 
+      isProcessed: false,
+      createdAt: now
+    };
+    this.unknownDtrFormats.set(id, newFormat);
+    return newFormat;
+  }
+
+  async updateUnknownDtrFormat(id: number, data: Partial<UnknownDtrFormat>): Promise<UnknownDtrFormat | undefined> {
+    const format = this.unknownDtrFormats.get(id);
+    if (!format) return undefined;
+    
+    const updatedFormat: UnknownDtrFormat = { ...format, ...data };
+    this.unknownDtrFormats.set(id, updatedFormat);
+    return updatedFormat;
+  }
+
+  async deleteUnknownDtrFormat(id: number): Promise<boolean> {
+    return this.unknownDtrFormats.delete(id);
+  }
+
+  // Clear operations
+  async clearDtrFormats(): Promise<void> {
+    this.dtrFormats.clear();
+    this.currentDtrFormatId = 1;
+  }
+
+  async clearUnknownDtrFormats(): Promise<void> {
+    this.unknownDtrFormats.clear();
+    this.currentUnknownDtrFormatId = 1;
+  }
+
   async clearAll(): Promise<void> {
     await this.clearEmployees();
     await this.clearCompanies();
     await this.clearDTRs();
+    await this.clearDtrFormats();
+    await this.clearUnknownDtrFormats();
     await this.clearPayrolls();
     await this.clearUsers();
     await this.clearActivities();
