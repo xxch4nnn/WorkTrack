@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { processDTRImage, ParsedDTRData } from "@/lib/services/ocrService";
+import { processDTRImage, ParsedDTRData, fetchDTRFormats } from "@/lib/services/ocrService";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -76,7 +76,10 @@ const DTRCapture: React.FC<DTRCaptureProps> = ({
     setProcessing(true);
     
     try {
-      // First process the image with OCR
+      // First ensure we have loaded formats from the server
+      await fetchDTRFormats();
+      
+      // Process the image with OCR, passing employee ID if available
       const dtrData = await processDTRImage(capturedImage);
       setResult(dtrData);
       

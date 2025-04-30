@@ -354,71 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DTR Format endpoints
   app.get("/api/dtr-formats", async (req, res) => {
     try {
-      const formats = [
-        {
-          id: 1,
-          name: "Standard Format",
-          companyId: 1,
-          pattern: "Employee: [NAME] #[ID]\\nDate: [DATE]\\nTime In: [TIME_IN]\\nTime Out: [TIME_OUT]",
-          extractionRules: {
-            employeeName: "NAME",
-            employeeId: "ID",
-            date: "DATE",
-            timeIn: "TIME_IN",
-            timeOut: "TIME_OUT"
-          },
-          example: "Employee: John Smith #12345\nDate: 05/15/2023\nTime In: 8:30 AM\nTime Out: 5:30 PM",
-          isActive: true
-        },
-        {
-          id: 2,
-          name: "Acme Corporation Format",
-          companyId: 2,
-          pattern: "Name: [NAME]\\nID: [ID]\\nWork Date: [DATE]\\nClock In: [TIME_IN]\\nClock Out: [TIME_OUT]",
-          extractionRules: {
-            employeeName: "NAME",
-            employeeId: "ID",
-            date: "DATE",
-            timeIn: "TIME_IN",
-            timeOut: "TIME_OUT"
-          },
-          example: "ACME CORPORATION\nDTR RECORD\nName: Jane Doe\nID: 54321\nWork Date: 06/01/2023\nClock In: 09:00 AM\nClock Out: 06:00 PM",
-          isActive: true
-        },
-        {
-          id: 3,
-          name: "Stark Industries Format",
-          companyId: 3,
-          pattern: "Name: [NAME]\\nID: [ID]\\nDATE: [DATE]\\nIN: [TIME_IN]\\nOUT: [TIME_OUT]\\nOT HRS: [OT_HOURS]",
-          extractionRules: {
-            employeeName: "NAME",
-            employeeId: "ID",
-            date: "DATE",
-            timeIn: "TIME_IN",
-            timeOut: "TIME_OUT",
-            overtimeHours: "OT_HOURS"
-          },
-          example: "STARK INDUSTRIES\nEMPLOYEE INFO\nName: Tony Stark\nID: 10001\nDEPT: R&D\nDATE: 06/15/2023\nIN: 08:00 AM\nOUT: 08:00 PM\nBREAK: 1 HR\nOT HRS: 3.0",
-          isActive: true
-        },
-        {
-          id: 4,
-          name: "Umbrella Corp Format",
-          companyId: 4,
-          pattern: "Employee: [NAME]\\nID Number: [ID]\\nWork Date: [DATE]\\nStart: [TIME_IN]\\nEnd: [TIME_OUT]\\nBreak: [BREAK_HOURS]",
-          extractionRules: {
-            employeeName: "NAME",
-            employeeId: "ID",
-            date: "DATE",
-            timeIn: "TIME_IN",
-            timeOut: "TIME_OUT",
-            breakHours: "BREAK_HOURS"
-          },
-          example: "UMBRELLA CORPORATION\nATTENDANCE REPORT\nEmployee: Chris Redfield\nID Number: 98765\nDepartment: Security\nWork Date: 07/01/2023\nStart: 07:00 AM\nEnd: 04:00 PM\nBreak: 1.0\nTotal Hours: 8.0",
-          isActive: true
-        }
-      ];
-      
+      const formats = await storage.getAllDtrFormats();
       res.json(formats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch DTR formats" });
@@ -427,19 +363,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/dtr-formats", async (req, res) => {
     try {
-      // In a production app, this would store to the database
-      // For now, we just log it and return a mock response
-      console.log("New DTR format data:", req.body);
-      
-      // Create an activity for admin review
-      await logActivity(1, "new_dtr_format_detected", "New DTR format detected and needs review");
-      
-      res.status(201).json({ 
-        id: Math.floor(Math.random() * 1000) + 10, // Mock ID
-        ...req.body,
-        isActive: false,
-        createdAt: new Date().toISOString()
+      const newFormat = await storage.createDtrFormat({
+        name: req.body.name || "New Format",
+        companyId: req.body.companyId || null,
+        pattern: req.body.pattern || "",
+        extractionRules: req.body.extractionRules || {},
+        example: req.body.example || "",
       });
+      
+      await logActivity(1, "dtr_format_created", `New DTR format created: ${newFormat.name}`);
+      
+      res.status(201).json(newFormat);
     } catch (error) {
       res.status(500).json({ message: "Failed to store DTR format" });
     }
@@ -447,42 +381,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/unknown-dtr-formats", async (req, res) => {
     try {
-      // Mock data to simulate unprocessed DTR formats
-      const unprocessedFormats = [
-        {
-          id: 1,
-          rawText: "GLOBAL COMPANY\nEMPLOYEE TIMESHEET\nName: Alex Johnson\nID: 987654\nPeriod: 07/01/2023\nClocked In: 09:15 AM\nClocked Out: 06:45 PM\nTotal Hours: 8.5",
-          parsedData: {
-            employeeName: "Alex Johnson",
-            employeeId: 987654,
-            date: "2023-07-01",
-            timeIn: "09:15",
-            timeOut: "18:45",
-            confidence: 0.65,
-            needsReview: true
-          },
-          companyId: null,
-          isProcessed: false,
-          createdAt: "2023-07-01T12:30:45Z"
-        }
-      ];
-      
-      res.json(unprocessedFormats);
+      const unknownFormats = await storage.getAllUnknownDtrFormats();
+      res.json(unknownFormats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch unknown DTR formats" });
+    }
+  });
+  
+  app.post("/api/unknown-dtr-formats", async (req, res) => {
+    try {
+      const newUnknownFormat = await storage.createUnknownDtrFormat({
+        rawText: req.body.rawText,
+        parsedData: req.body.parsedData || null,
+        imageData: req.body.imageData || null,
+        companyId: req.body.companyId || null,
+      });
+      
+      await logActivity(1, "unknown_dtr_format_detected", "New unrecognized DTR format stored for review");
+      
+      res.status(201).json(newUnknownFormat);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to store unknown DTR format" });
     }
   });
   
   app.post("/api/unknown-dtr-formats/:id/approve", async (req, res) => {
     try {
       const formatId = parseInt(req.params.id);
+      const unknownFormat = await storage.getUnknownDtrFormat(formatId);
       
-      // In a real app, this would create a new DTR format from the unknown one
-      // For demo, just log and return success
-      console.log(`Approved unknown DTR format ID: ${formatId}`);
-      await logActivity(1, "dtr_format_approved", `New DTR format template approved and added to system`);
+      if (!unknownFormat) {
+        return res.status(404).json({ message: "Unknown DTR format not found" });
+      }
       
-      res.json({ success: true, message: "DTR format approved and added to known formats" });
+      // Extract data from the unknown format to create a new DTR format
+      const newFormatData = {
+        name: req.body.name || "Approved Format",
+        companyId: req.body.companyId || unknownFormat.companyId,
+        pattern: req.body.pattern || "",
+        extractionRules: req.body.extractionRules || {},
+        example: unknownFormat.rawText
+      };
+      
+      // Create a new DTR format
+      const newFormat = await storage.createDtrFormat(newFormatData);
+      
+      // Mark unknown format as processed
+      await storage.updateUnknownDtrFormat(formatId, {
+        ...unknownFormat,
+        isProcessed: true
+      });
+      
+      await logActivity(1, "dtr_format_approved", `DTR format approved and added as: ${newFormat.name}`);
+      
+      res.json({ 
+        success: true, 
+        message: "DTR format approved and added to known formats",
+        format: newFormat
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to approve DTR format" });
     }
@@ -493,34 +449,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { imageData, employeeId } = req.body;
       
-      // In a real implementation, we would:
-      // 1. Process the image with OCR
-      // 2. Try to match against known formats
-      // 3. Return parsed data
+      // Normally, we would process the image with OCR here,
+      // but since Tesseract is a client-side library, this
+      // processing happens in the frontend
+
+      // Instead, we'll simulate matching against known formats
+      // by using our stored DTR formats
+
+      // Get all known DTR formats
+      const formats = await storage.getAllDtrFormats();
+      const employee = employeeId ? await storage.getEmployee(parseInt(employeeId)) : null;
+      const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : undefined;
       
-      console.log("Processing DTR image for employee:", employeeId);
+      // Log the processing attempt
+      console.log(`Processing DTR image${employeeId ? ` for employee #${employeeId}` : ''}`);
+      await logActivity(1, "dtr_processing_attempt", `DTR image processing attempt${employee ? ` for ${employeeName}` : ''}`);
       
+      // Return format information to help the client
       res.json({
         success: true,
-        parsedData: {
-          employeeId: parseInt(employeeId),
-          employeeName: "Auto-detected Name",
-          date: format(new Date(), "yyyy-MM-dd"),
-          timeIn: "08:30",
-          timeOut: "17:30",
-          breakHours: 1,
-          overtimeHours: 0,
-          remarks: "Auto-detected from image",
-          confidence: 0.85,
-          needsReview: true
-        }
+        formats: formats,
+        employeeInfo: employee ? {
+          id: employee.id,
+          name: employeeName,
+          companyId: employee.companyId
+        } : null
       });
     } catch (error) {
       console.error("Error processing DTR image:", error);
       res.status(500).json({ 
         success: false, 
         message: "Failed to process DTR image",
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   });

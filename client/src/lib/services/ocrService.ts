@@ -1,4 +1,5 @@
 import { createWorker, ImageLike } from 'tesseract.js';
+import { apiRequest } from '@/lib/queryClient';
 
 // Interface for parsed DTR data
 export interface ParsedDTRData {
@@ -18,12 +19,12 @@ export interface ParsedDTRData {
   rawText: string;
 }
 
-// Known DTR formats for different companies
-export interface DTRFormat {
+// Known DTR formats from database
+export interface StoredDTRFormat {
   id: number;
   name: string;
-  companyId: number;
-  pattern: RegExp;
+  companyId: number | null;
+  pattern: string;
   extractionRules: {
     employeeName?: string;
     employeeId?: string;
@@ -32,12 +33,20 @@ export interface DTRFormat {
     timeOut?: string;
     breakHours?: string;
     overtimeHours?: string;
+    [key: string]: string | undefined;
   };
-  example: string;
+  example: string | null;
+  isActive: boolean | null;
+  createdAt: Date | null;
 }
 
-// Pre-defined DTR formats from different companies
-const knownDTRFormats: DTRFormat[] = [
+// Runtime DTR format with compiled RegExp pattern
+export interface DTRFormat extends Omit<StoredDTRFormat, 'pattern'> {
+  pattern: RegExp;
+}
+
+// Fallback formats if API call fails
+const fallbackDTRFormats: DTRFormat[] = [
   {
     id: 1,
     name: "Standard Format",
@@ -50,53 +59,14 @@ const knownDTRFormats: DTRFormat[] = [
       timeIn: "$4",
       timeOut: "$5"
     },
-    example: "Employee: John Smith #12345\nDate: 05/15/2023\nTime In: 8:30 AM\nTime Out: 5:30 PM"
-  },
-  {
-    id: 2,
-    name: "Acme Corporation Format",
-    companyId: 2,
-    pattern: /Name:\s*([^\n]+).*ID:\s*(\d+).*Work Date:\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4}).*Clock In:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?).*Clock Out:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)/is,
-    extractionRules: {
-      employeeName: "$1",
-      employeeId: "$2",
-      date: "$3",
-      timeIn: "$4",
-      timeOut: "$5"
-    },
-    example: "ACME CORPORATION\nDTR RECORD\nName: Jane Doe\nID: 54321\nWork Date: 06/01/2023\nClock In: 09:00 AM\nClock Out: 06:00 PM"
-  },
-  {
-    id: 3,
-    name: "Stark Industries Format",
-    companyId: 3,
-    pattern: /EMPLOYEE INFO[\s\S]*?Name:\s*([^\n]+)[\s\S]*?ID:\s*(\d+)[\s\S]*?DATE:\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})[\s\S]*?IN:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)[\s\S]*?OUT:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)[\s\S]*?OT HRS:\s*(\d+(?:\.\d+)?)/is,
-    extractionRules: {
-      employeeName: "$1",
-      employeeId: "$2",
-      date: "$3",
-      timeIn: "$4",
-      timeOut: "$5",
-      overtimeHours: "$6"
-    },
-    example: "STARK INDUSTRIES\nEMPLOYEE INFO\nName: Tony Stark\nID: 10001\nDEPT: R&D\nDATE: 06/15/2023\nIN: 08:00 AM\nOUT: 08:00 PM\nBREAK: 1 HR\nOT HRS: 3.0"
-  },
-  {
-    id: 4,
-    name: "Umbrella Corp Format",
-    companyId: 4,
-    pattern: /ATTENDANCE[\s\S]*?Employee:\s*([^\n]+)[\s\S]*?ID Number:\s*(\d+)[\s\S]*?Work Date:\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})[\s\S]*?Start:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)[\s\S]*?End:\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)[\s\S]*?Break:\s*(\d+(?:\.\d+)?)/is,
-    extractionRules: {
-      employeeName: "$1",
-      employeeId: "$2",
-      date: "$3",
-      timeIn: "$4",
-      timeOut: "$5",
-      breakHours: "$6"
-    },
-    example: "UMBRELLA CORPORATION\nATTENDANCE REPORT\nEmployee: Chris Redfield\nID Number: 98765\nDepartment: Security\nWork Date: 07/01/2023\nStart: 07:00 AM\nEnd: 04:00 PM\nBreak: 1.0\nTotal Hours: 8.0"
+    example: "Employee: John Smith #12345\nDate: 05/15/2023\nTime In: 8:30 AM\nTime Out: 5:30 PM",
+    isActive: true,
+    createdAt: null
   }
 ];
+
+// In-memory cache of DTR formats
+let knownDTRFormats: DTRFormat[] = [];
 
 /**
  * Normalizes time strings to 24-hour format
@@ -287,10 +257,67 @@ export const analyzeDTRWithPuter = async (text: string): Promise<ParsedDTRData |
 };
 
 /**
+ * Convert stored DTR format with string pattern to runtime DTR format with RegExp
+ */
+const convertToDTRFormat = (storedFormat: StoredDTRFormat): DTRFormat => {
+  try {
+    // Convert the string pattern to a RegExp object
+    // Note: we use 'is' flags for case-insensitive and dot-matches-all
+    const pattern = new RegExp(storedFormat.pattern, 'is');
+    return {
+      ...storedFormat,
+      pattern
+    };
+  } catch (error) {
+    console.error(`Failed to convert pattern for format ${storedFormat.name}:`, error);
+    // Return with a pattern that won't match anything as a fallback
+    return {
+      ...storedFormat,
+      pattern: /^\b$/
+    };
+  }
+};
+
+/**
+ * Fetch DTR formats from the server
+ */
+export const fetchDTRFormats = async (): Promise<DTRFormat[]> => {
+  try {
+    // Fetch formats from server
+    const response = await apiRequest('GET', '/api/dtr-formats');
+    const storedFormats: StoredDTRFormat[] = await response.json();
+    
+    // Convert string patterns to RegExp for each format
+    const formats = storedFormats
+      .filter(format => format.isActive) // Only use active formats
+      .map(format => convertToDTRFormat(format));
+    
+    // Update in-memory cache
+    knownDTRFormats = formats;
+    
+    return formats;
+  } catch (error) {
+    console.error("Error fetching DTR formats:", error);
+    
+    // Use fallback formats if API call fails
+    if (knownDTRFormats.length === 0) {
+      knownDTRFormats = fallbackDTRFormats;
+    }
+    
+    return knownDTRFormats;
+  }
+};
+
+/**
  * Process image using Tesseract OCR to extract text, then parse the DTR data
  */
-export const processDTRImage = async (imageData: ImageLike): Promise<ParsedDTRData> => {
+export const processDTRImage = async (imageData: ImageLike, employeeId?: number): Promise<ParsedDTRData> => {
   try {
+    // Make sure we have up-to-date DTR formats
+    if (knownDTRFormats.length === 0) {
+      await fetchDTRFormats();
+    }
+    
     // Initialize Tesseract worker
     const worker = await createWorker();
     
@@ -306,12 +333,24 @@ export const processDTRImage = async (imageData: ImageLike): Promise<ParsedDTRDa
     
     // If known format is detected, extract data
     if (format && matches) {
-      return extractDataFromFormat(text, format, matches);
+      const extractedData = extractDataFromFormat(text, format, matches);
+      
+      // If employeeId is provided (from the UI), override any detected ID
+      if (employeeId) {
+        extractedData.employeeId = employeeId;
+      }
+      
+      return extractedData;
     } 
     // If not recognized, try to analyze with Puter
     else {
       const puterResult = await analyzeDTRWithPuter(text);
       if (puterResult) {
+        // If employeeId is provided, override 
+        if (employeeId) {
+          puterResult.employeeId = employeeId;
+        }
+        
         return puterResult;
       }
       
@@ -320,7 +359,9 @@ export const processDTRImage = async (imageData: ImageLike): Promise<ParsedDTRDa
         confidence: 0.2,
         needsReview: true,
         rawText: text,
-        remarks: "Unrecognized DTR format. Please review manually."
+        employeeId,
+        remarks: "Unrecognized DTR format. Please review manually.",
+        isNewFormat: true
       };
     }
   } catch (error) {
@@ -329,6 +370,7 @@ export const processDTRImage = async (imageData: ImageLike): Promise<ParsedDTRDa
       confidence: 0,
       needsReview: true,
       rawText: "Error processing image. Please try again.",
+      employeeId,
       remarks: String(error)
     };
   }
