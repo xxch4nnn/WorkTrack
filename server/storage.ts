@@ -80,6 +80,7 @@ export interface IStorage {
   getActivity(id: number): Promise<Activity | undefined>;
   getAllActivities(): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+  markAllActivitiesAsRead(): Promise<void>;
 
   // Data reset operations
   clearEmployees(): Promise<void>;
@@ -486,9 +487,15 @@ export class MemStorage implements IStorage {
 
   async createActivity(activity: InsertActivity): Promise<Activity> {
     const id = this.currentActivityId++;
-    const newActivity: Activity = { ...activity, id };
+    const newActivity: Activity = { ...activity, id, isRead: false };
     this.activities.set(id, newActivity);
     return newActivity;
+  }
+  
+  async markAllActivitiesAsRead(): Promise<void> {
+    for (const [id, activity] of this.activities.entries()) {
+      this.activities.set(id, { ...activity, isRead: true });
+    }
   }
 
   // Data reset operations
