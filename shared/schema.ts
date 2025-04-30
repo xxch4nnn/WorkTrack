@@ -99,6 +99,41 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
 });
 
+// DTR Format table (for storing OCR recognition patterns)
+export const dtrFormats = pgTable("dtr_formats", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  companyId: integer("company_id").references(() => companies.id),
+  pattern: text("pattern").notNull(),
+  extractionRules: json("extraction_rules").notNull(),
+  example: text("example"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDtrFormatSchema = createInsertSchema(dtrFormats).omit({
+  id: true,
+  isActive: true,
+  createdAt: true,
+});
+
+// Unknown DTR Format table (for learning new formats)
+export const unknownDtrFormats = pgTable("unknown_dtr_formats", {
+  id: serial("id").primaryKey(),
+  rawText: text("raw_text").notNull(),
+  parsedData: json("parsed_data"),
+  imageData: text("image_data"),
+  companyId: integer("company_id").references(() => companies.id),
+  isProcessed: boolean("is_processed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUnknownDtrFormatSchema = createInsertSchema(unknownDtrFormats).omit({
+  id: true,
+  isProcessed: true,
+  createdAt: true,
+});
+
 // Activity table (for system logs)
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
@@ -121,6 +156,12 @@ export type InsertCompany = z.infer<typeof insertCompanySchema>;
 
 export type DTR = typeof dtrs.$inferSelect;
 export type InsertDTR = z.infer<typeof insertDtrSchema>;
+
+export type DtrFormat = typeof dtrFormats.$inferSelect;
+export type InsertDtrFormat = z.infer<typeof insertDtrFormatSchema>;
+
+export type UnknownDtrFormat = typeof unknownDtrFormats.$inferSelect;
+export type InsertUnknownDtrFormat = z.infer<typeof insertUnknownDtrFormatSchema>;
 
 export type Payroll = typeof payrolls.$inferSelect;
 export type InsertPayroll = z.infer<typeof insertPayrollSchema>;

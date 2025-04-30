@@ -350,6 +350,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to request DTR revision" });
     }
   });
+  
+  // DTR Format endpoints
+  app.get("/api/dtr-formats", async (req, res) => {
+    try {
+      const formats = [
+        {
+          id: 1,
+          name: "Standard Format",
+          companyId: 1,
+          pattern: "Employee: [NAME] #[ID]\\nDate: [DATE]\\nTime In: [TIME_IN]\\nTime Out: [TIME_OUT]",
+          extractionRules: {
+            employeeName: "NAME",
+            employeeId: "ID",
+            date: "DATE",
+            timeIn: "TIME_IN",
+            timeOut: "TIME_OUT"
+          },
+          example: "Employee: John Smith #12345\nDate: 05/15/2023\nTime In: 8:30 AM\nTime Out: 5:30 PM",
+          isActive: true
+        },
+        {
+          id: 2,
+          name: "Acme Corporation Format",
+          companyId: 2,
+          pattern: "Name: [NAME]\\nID: [ID]\\nWork Date: [DATE]\\nClock In: [TIME_IN]\\nClock Out: [TIME_OUT]",
+          extractionRules: {
+            employeeName: "NAME",
+            employeeId: "ID",
+            date: "DATE",
+            timeIn: "TIME_IN",
+            timeOut: "TIME_OUT"
+          },
+          example: "ACME CORPORATION\nDTR RECORD\nName: Jane Doe\nID: 54321\nWork Date: 06/01/2023\nClock In: 09:00 AM\nClock Out: 06:00 PM",
+          isActive: true
+        },
+        {
+          id: 3,
+          name: "Stark Industries Format",
+          companyId: 3,
+          pattern: "Name: [NAME]\\nID: [ID]\\nDATE: [DATE]\\nIN: [TIME_IN]\\nOUT: [TIME_OUT]\\nOT HRS: [OT_HOURS]",
+          extractionRules: {
+            employeeName: "NAME",
+            employeeId: "ID",
+            date: "DATE",
+            timeIn: "TIME_IN",
+            timeOut: "TIME_OUT",
+            overtimeHours: "OT_HOURS"
+          },
+          example: "STARK INDUSTRIES\nEMPLOYEE INFO\nName: Tony Stark\nID: 10001\nDEPT: R&D\nDATE: 06/15/2023\nIN: 08:00 AM\nOUT: 08:00 PM\nBREAK: 1 HR\nOT HRS: 3.0",
+          isActive: true
+        },
+        {
+          id: 4,
+          name: "Umbrella Corp Format",
+          companyId: 4,
+          pattern: "Employee: [NAME]\\nID Number: [ID]\\nWork Date: [DATE]\\nStart: [TIME_IN]\\nEnd: [TIME_OUT]\\nBreak: [BREAK_HOURS]",
+          extractionRules: {
+            employeeName: "NAME",
+            employeeId: "ID",
+            date: "DATE",
+            timeIn: "TIME_IN",
+            timeOut: "TIME_OUT",
+            breakHours: "BREAK_HOURS"
+          },
+          example: "UMBRELLA CORPORATION\nATTENDANCE REPORT\nEmployee: Chris Redfield\nID Number: 98765\nDepartment: Security\nWork Date: 07/01/2023\nStart: 07:00 AM\nEnd: 04:00 PM\nBreak: 1.0\nTotal Hours: 8.0",
+          isActive: true
+        }
+      ];
+      
+      res.json(formats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DTR formats" });
+    }
+  });
+  
+  app.post("/api/dtr-formats", async (req, res) => {
+    try {
+      // In a production app, this would store to the database
+      // For now, we just log it and return a mock response
+      console.log("New DTR format data:", req.body);
+      
+      // Create an activity for admin review
+      await logActivity(1, "new_dtr_format_detected", "New DTR format detected and needs review");
+      
+      res.status(201).json({ 
+        id: Math.floor(Math.random() * 1000) + 10, // Mock ID
+        ...req.body,
+        isActive: false,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to store DTR format" });
+    }
+  });
+  
+  app.get("/api/unknown-dtr-formats", async (req, res) => {
+    try {
+      // Mock data to simulate unprocessed DTR formats
+      const unprocessedFormats = [
+        {
+          id: 1,
+          rawText: "GLOBAL COMPANY\nEMPLOYEE TIMESHEET\nName: Alex Johnson\nID: 987654\nPeriod: 07/01/2023\nClocked In: 09:15 AM\nClocked Out: 06:45 PM\nTotal Hours: 8.5",
+          parsedData: {
+            employeeName: "Alex Johnson",
+            employeeId: 987654,
+            date: "2023-07-01",
+            timeIn: "09:15",
+            timeOut: "18:45",
+            confidence: 0.65,
+            needsReview: true
+          },
+          companyId: null,
+          isProcessed: false,
+          createdAt: "2023-07-01T12:30:45Z"
+        }
+      ];
+      
+      res.json(unprocessedFormats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch unknown DTR formats" });
+    }
+  });
+  
+  app.post("/api/unknown-dtr-formats/:id/approve", async (req, res) => {
+    try {
+      const formatId = parseInt(req.params.id);
+      
+      // In a real app, this would create a new DTR format from the unknown one
+      // For demo, just log and return success
+      console.log(`Approved unknown DTR format ID: ${formatId}`);
+      await logActivity(1, "dtr_format_approved", `New DTR format template approved and added to system`);
+      
+      res.json({ success: true, message: "DTR format approved and added to known formats" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve DTR format" });
+    }
+  });
+  
+  // OCR Endpoint for processing DTR images
+  app.post("/api/process-dtr-image", async (req, res) => {
+    try {
+      const { imageData, employeeId } = req.body;
+      
+      // In a real implementation, we would:
+      // 1. Process the image with OCR
+      // 2. Try to match against known formats
+      // 3. Return parsed data
+      
+      console.log("Processing DTR image for employee:", employeeId);
+      
+      res.json({
+        success: true,
+        parsedData: {
+          employeeId: parseInt(employeeId),
+          employeeName: "Auto-detected Name",
+          date: format(new Date(), "yyyy-MM-dd"),
+          timeIn: "08:30",
+          timeOut: "17:30",
+          breakHours: 1,
+          overtimeHours: 0,
+          remarks: "Auto-detected from image",
+          confidence: 0.85,
+          needsReview: true
+        }
+      });
+    } catch (error) {
+      console.error("Error processing DTR image:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to process DTR image",
+        error: error.message
+      });
+    }
+  });
 
   // Payroll endpoints
   app.get("/api/payrolls", async (req, res) => {

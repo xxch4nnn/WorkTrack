@@ -41,6 +41,20 @@ export interface IStorage {
   updateDTR(id: number, data: Partial<DTR>): Promise<DTR | undefined>;
   deleteDTR(id: number): Promise<boolean>;
 
+  // DTR Format operations
+  getDtrFormat(id: number): Promise<DtrFormat | undefined>;
+  getAllDtrFormats(): Promise<DtrFormat[]>;
+  createDtrFormat(format: InsertDtrFormat): Promise<DtrFormat>;
+  updateDtrFormat(id: number, data: Partial<DtrFormat>): Promise<DtrFormat | undefined>;
+  deleteDtrFormat(id: number): Promise<boolean>;
+
+  // Unknown DTR Format operations
+  getUnknownDtrFormat(id: number): Promise<UnknownDtrFormat | undefined>;
+  getAllUnknownDtrFormats(): Promise<UnknownDtrFormat[]>;
+  createUnknownDtrFormat(format: InsertUnknownDtrFormat): Promise<UnknownDtrFormat>;
+  updateUnknownDtrFormat(id: number, data: Partial<UnknownDtrFormat>): Promise<UnknownDtrFormat | undefined>;
+  deleteUnknownDtrFormat(id: number): Promise<boolean>;
+
   // Payroll operations
   getPayroll(id: number): Promise<Payroll | undefined>;
   getAllPayrolls(): Promise<Payroll[]>;
@@ -65,6 +79,8 @@ export interface IStorage {
   clearEmployees(): Promise<void>;
   clearCompanies(): Promise<void>;
   clearDTRs(): Promise<void>;
+  clearDtrFormats(): Promise<void>;
+  clearUnknownDtrFormats(): Promise<void>;
   clearPayrolls(): Promise<void>;
   clearUsers(): Promise<void>;
   clearActivities(): Promise<void>;
