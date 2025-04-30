@@ -14,11 +14,11 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Header toggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} />
-        <main className="flex-1 bg-gray-50 p-4 md:p-6 overflow-hidden">
+        <main className="flex-1 bg-gray-50 p-4 md:p-6 overflow-auto">
           {children}
         </main>
       </div>
