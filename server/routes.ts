@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { format } from "date-fns";
@@ -10,8 +10,27 @@ import {
   insertActivitySchema,
 } from "@shared/schema";
 import { calculateRegularHours } from "../client/src/lib/utils/dateUtils";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes and middleware
+  setupAuth(app);
+  
+  // Middleware to check if user is authenticated
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ error: "Authentication required" });
+  };
+  
+  // Middleware to check if user is an admin
+  const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && req.user?.role === "Admin") {
+      return next();
+    }
+    res.status(403).json({ error: "Admin access required" });
+  };
   // Helper middleware for validating requests
   const validateRequest = (schema: any) => {
     return (req: any, res: any, next: any) => {
@@ -38,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Employee endpoints
-  app.get("/api/employees", async (req, res) => {
+  app.get("/api/employees", isAuthenticated, async (req, res) => {
     try {
       const employees = await storage.getAllEmployees();
       res.json(employees);

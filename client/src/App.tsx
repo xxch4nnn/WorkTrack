@@ -12,31 +12,88 @@ import DTRManagement from "@/pages/DTRManagement";
 import Payroll from "@/pages/Payroll";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
+import AuthPage from "@/pages/auth-page";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/employees" component={Employees} />
-        <Route path="/companies" component={Companies} />
-        <Route path="/dtr-management" component={DTRManagement} />
-        <Route path="/payroll" component={Payroll} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/settings" component={Settings} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      
+      {/* Protected routes wrapped in Layout */}
+      <ProtectedRoute 
+        path="/" 
+        component={() => (
+          <Layout>
+            <Dashboard />
+          </Layout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/employees" 
+        component={() => (
+          <Layout>
+            <Employees />
+          </Layout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/companies" 
+        component={() => (
+          <Layout>
+            <Companies />
+          </Layout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/dtr-management" 
+        component={() => (
+          <Layout>
+            <DTRManagement />
+          </Layout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/payroll" 
+        component={() => (
+          <Layout>
+            <Payroll />
+          </Layout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/reports" 
+        component={() => (
+          <Layout>
+            <Reports />
+          </Layout>
+        )} 
+        adminOnly={true} 
+      />
+      <ProtectedRoute 
+        path="/settings" 
+        component={() => (
+          <Layout>
+            <Settings />
+          </Layout>
+        )} 
+        adminOnly={true} 
+      />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
