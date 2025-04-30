@@ -16,6 +16,7 @@ import { Activity } from '@shared/schema';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip } from '@/components/ui/tooltip';
 
 type NotificationProps = {
   className?: string;
@@ -87,21 +88,23 @@ const NotificationCenter: React.FC<NotificationProps> = ({ className }) => {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className={cn("relative", className)}
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] flex items-center justify-center p-0 text-xs" 
-              variant="destructive"
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
+        <Tooltip content={`${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("relative hover:bg-gray-100 transition-colors", className)}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 min-w-[1.25rem] flex items-center justify-center p-0 text-xs" 
+                variant="destructive"
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </Tooltip>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
         <DropdownMenuLabel className="flex justify-between items-center">
