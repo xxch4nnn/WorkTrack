@@ -398,12 +398,12 @@ const DTRTable = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                    className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 overflow-hidden text-ellipsis whitespace-nowrap"
                     onClick={() => setShowBulkApproveAlert(true)}
                     disabled={pendingDTRs === 0}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Approve ({pendingDTRs})
+                    <CheckCircle className="h-4 w-4 flex-shrink-0 mr-1" />
+                    <span className="truncate">Approve ({pendingDTRs})</span>
                   </Button>
                 </Tooltip>
                 
@@ -411,12 +411,12 @@ const DTRTable = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 overflow-hidden text-ellipsis whitespace-nowrap"
                     onClick={() => setShowBulkRejectAlert(true)}
                     disabled={pendingDTRs === 0}
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    Reject ({pendingDTRs})
+                    <XCircle className="h-4 w-4 flex-shrink-0 mr-1" />
+                    <span className="truncate">Reject ({pendingDTRs})</span>
                   </Button>
                 </Tooltip>
                 
@@ -424,12 +424,12 @@ const DTRTable = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 overflow-hidden text-ellipsis whitespace-nowrap"
                     onClick={() => setShowBulkPayrollAlert(true)}
                     disabled={approvedDTRs === 0}
                   >
-                    <CreditCard className="h-4 w-4 mr-1" />
-                    Process Payroll ({approvedDTRs})
+                    <CreditCard className="h-4 w-4 flex-shrink-0 mr-1" />
+                    <span className="truncate">Payroll ({approvedDTRs})</span>
                   </Button>
                 </Tooltip>
               </div>
@@ -512,20 +512,20 @@ const DTRTable = ({
                     </td>
                   )}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-fit-sm font-medium text-gray-900 truncate max-w-[180px]" title={getEmployeeName(dtr.employeeId)}>
                       {getEmployeeName(dtr.employeeId)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{dtr.date}</div>
+                    <div className="text-fit-sm text-gray-900 truncate-dynamic">{dtr.date}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-fit-sm text-gray-900 truncate-dynamic">
                       {dtr.timeIn} - {dtr.timeOut}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-fit-sm text-gray-900 truncate-dynamic">
                       {dtr.regularHours} hrs
                       {dtr.overtimeHours > 0 && (
                         <span className="ml-1 text-primary">
@@ -535,7 +535,7 @@ const DTRTable = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{dtr.type}</div>
+                    <div className="text-fit-sm text-gray-900 truncate-dynamic">{dtr.type}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(dtr.status)}
