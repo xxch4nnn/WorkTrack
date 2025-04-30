@@ -9,20 +9,81 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, MoreVertical, CheckCircle, XCircle, Edit, CreditCard } from "lucide-react";
+import { 
+  Eye, MoreVertical, CheckCircle, XCircle, Edit, CreditCard, 
+  Check, ChevronDown, AlertCircle, Loader2
+} from "lucide-react";
 import { DTR, Employee } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type DTRTableProps = {
   dtrs?: DTR[];
   isLoading: boolean;
   employees?: Employee[];
+  enableBulkActions?: boolean;
+  onBulkSelect?: (selectedIds: number[]) => void;
 };
 
-const DTRTable = ({ dtrs = [], isLoading, employees = [] }: DTRTableProps) => {
+const DTRTable = ({ 
+  dtrs = [], 
+  isLoading, 
+  employees = [],
+  enableBulkActions = false,
+  onBulkSelect
+}: DTRTableProps) => {
   const { toast } = useToast();
+  const [selectedDTRs, setSelectedDTRs] = useState<number[]>([]);
+  const [isAllSelected, setIsAllSelected] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [showBulkApproveAlert, setShowBulkApproveAlert] = useState(false);
+  const [showBulkRejectAlert, setShowBulkRejectAlert] = useState(false);
+  const [showBulkPayrollAlert, setShowBulkPayrollAlert] = useState(false);
+  
+  // Handle bulk selection
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedDTRs([]);
+    } else {
+      const pendingDTRs = dtrs.filter(dtr => dtr.status === "Pending").map(dtr => dtr.id);
+      setSelectedDTRs(pendingDTRs);
+    }
+    setIsAllSelected(!isAllSelected);
+    
+    if (onBulkSelect) {
+      onBulkSelect(isAllSelected ? [] : dtrs.map(dtr => dtr.id));
+    }
+  };
+  
+  const handleSelectDTR = (dtrId: number, checked: boolean) => {
+    let newSelected: number[];
+    if (checked) {
+      newSelected = [...selectedDTRs, dtrId];
+    } else {
+      newSelected = selectedDTRs.filter(id => id !== dtrId);
+    }
+    setSelectedDTRs(newSelected);
+    
+    if (onBulkSelect) {
+      onBulkSelect(newSelected);
+    }
+    
+    // Update all selected state
+    setIsAllSelected(dtrs.length > 0 && newSelected.length === dtrs.length);
+  };
 
   const handleViewDTR = (dtrId: number) => {
     toast({
