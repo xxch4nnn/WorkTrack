@@ -126,8 +126,8 @@ const DTRCapture: React.FC<DTRCaptureProps> = ({
       const regularHours = Math.max(0, totalMinutes / 60);
       
       // If this is a new DTR format, log it for learning
-      if (dtrData.needsReview) {
-        await apiRequest("POST", "/api/dtr-formats", { 
+      if (dtrData.needsReview || dtrData.isNewFormat) {
+        await apiRequest("POST", "/api/unknown-dtr-formats", { 
           rawText: dtrData.rawText,
           parsedData: dtrData,
           companyId: dtrData.companyId

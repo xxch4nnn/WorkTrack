@@ -19,7 +19,8 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Cog, UserCog, Building, FileText, CreditCard, AlertCircle } from "lucide-react";
+import { Cog, UserCog, Building, FileText, CreditCard, AlertCircle, FileSpreadsheet } from "lucide-react";
+import DTRFormatManagement from "@/components/dtr/DTRFormatManagement";
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -148,7 +149,7 @@ const Settings = () => {
       </div>
 
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="mb-6">
-        <TabsList className="grid grid-cols-4 w-full md:w-auto">
+        <TabsList className="grid grid-cols-5 w-full md:w-auto">
           <TabsTrigger value="profile" className="flex items-center">
             <UserCog className="mr-2 h-4 w-4" />
             Profile
@@ -160,6 +161,10 @@ const Settings = () => {
           <TabsTrigger value="payroll" className="flex items-center">
             <CreditCard className="mr-2 h-4 w-4" />
             Payroll
+          </TabsTrigger>
+          <TabsTrigger value="dtrformats" className="flex items-center">
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            DTR Formats
           </TabsTrigger>
           <TabsTrigger value="data" className="flex items-center">
             <FileText className="mr-2 h-4 w-4" />

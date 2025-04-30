@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { processDTRImage, ParsedDTRData } from '@/lib/services/ocrService';
+import { processDTRImage, ParsedDTRData, fetchDTRFormats } from '@/lib/services/ocrService';
 
 interface DTRUploadProps {
   onProcessed: (data: ParsedDTRData) => void;
@@ -72,6 +72,9 @@ const DTRUpload = ({ onProcessed, onCancel }: DTRUploadProps) => {
           return newProgress > 95 ? 95 : newProgress;
         });
       }, 300);
+      
+      // First ensure we have loaded formats from the server
+      await fetchDTRFormats();
       
       // Process the image
       const result = await processDTRImage(previewImage);
