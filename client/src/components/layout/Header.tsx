@@ -1,6 +1,6 @@
-import { Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import NotificationCenter from "@/components/NotificationCenter";
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -50,12 +50,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <button className="text-gray-600 focus:outline-none">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-error"></span>
-              </button>
-            </div>
+            <NotificationCenter />
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center focus:outline-none">
                 <Avatar className="h-8 w-8">

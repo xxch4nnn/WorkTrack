@@ -851,6 +851,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/activities/mark-read", async (req, res) => {
+    try {
+      // In a real application, you would update the isRead status in the database
+      // For now, we'll just return a success response
+      res.status(200).json({ success: true, message: "All notifications marked as read" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark notifications as read" });
+    }
+  });
+
   // User profile
   app.get("/api/users/profile", async (req, res) => {
     try {
