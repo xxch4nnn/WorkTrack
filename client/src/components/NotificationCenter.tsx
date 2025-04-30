@@ -127,7 +127,7 @@ const NotificationCenter: React.FC<NotificationProps> = ({ className }) => {
           ) : (
             <DropdownMenuGroup>
               {activities.map((activity, index) => (
-                <div key={activity.id || index}>
+                <React.Fragment key={activity.id || index}>
                   <DropdownMenuItem 
                     className={cn(
                       "flex items-start py-2 px-4 cursor-default", 
@@ -145,7 +145,7 @@ const NotificationCenter: React.FC<NotificationProps> = ({ className }) => {
                     </div>
                   </DropdownMenuItem>
                   {index < activities.length - 1 && <DropdownMenuSeparator />}
-                </div>
+                </React.Fragment>
               ))}
             </DropdownMenuGroup>
           )}
