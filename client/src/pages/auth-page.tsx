@@ -1,143 +1,99 @@
-import React, { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect, useLocation } from "wouter";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLocation } from "wouter";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { 
-  BriefcaseIcon, 
-  Clock, 
-  ClipboardList, 
-  UserIcon, 
-  CreditCard,
-  Check,
-  Loader2
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
 
-// Schema for login form
+// Create schemas for login and registration
 const loginSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" })
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-// Schema for registration form (based on the user schema)
 const registerSchema = insertUserSchema
   .extend({
-    password: z.string()
-      .min(6, { message: "Password must be at least 6 characters" })
-      .max(100),
-    confirmPassword: z.string()
+    confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
   })
-  .refine(data => data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
-    path: ["confirmPassword"]
+    path: ["confirmPassword"],
   });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<string>("login");
-  const [location, setLocation] = useLocation();
-  const { toast } = useToast();
-  const { user, isLoading, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // Redirect to home if already logged in
-  if (!isLoading && user) {
-    return <Redirect to="/" />;
-  }
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
+  // Setup login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
-      password: ""
-    }
+      password: "",
+    },
   });
 
+  // Setup registration form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
       firstName: "",
       lastName: "",
-      email: "",
-      role: "Staff",
-      status: "Active"
-    }
+      role: "User",
+    },
   });
 
   async function onLoginSubmit(data: LoginFormValues) {
-    loginMutation.mutate(data, {
-      onSuccess: () => {
-        setLocation("/");
-        toast({
-          title: "Login successful",
-          description: "You have been logged in successfully",
-          variant: "default",
-        });
-      }
-    });
+    await loginMutation.mutateAsync(data);
   }
 
   async function onRegisterSubmit(data: RegisterFormValues) {
-    // Remove the confirmPassword field before sending to API
-    const { confirmPassword, ...registerData } = data;
-    
-    registerMutation.mutate(registerData, {
-      onSuccess: () => {
-        setLocation("/");
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created successfully",
-          variant: "default",
-        });
-      }
-    });
+    // Remove confirmPassword before submitting
+    const { confirmPassword, ...registrationData } = data;
+    await registerMutation.mutateAsync(registrationData);
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Auth Form */}
-      <div className="flex flex-col justify-center w-full max-w-md p-8 mx-auto">
-        <Card className="w-full">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Welcome to WorkTrack</CardTitle>
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+      {/* Left column with forms */}
+      <div className="w-full lg:w-1/2 p-4 md:p-8 flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center text-primary">
+              WorkTrack
+            </CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Your comprehensive manpower management solution
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
-
+              
               {/* Login Form */}
               <TabsContent value="login">
                 <Form {...loginForm}>
@@ -155,7 +111,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={loginForm.control}
                       name="password"
@@ -169,7 +124,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
                     <Button 
                       type="submit" 
                       className="w-full" 
@@ -187,8 +141,8 @@ export default function AuthPage() {
                   </form>
                 </Form>
               </TabsContent>
-
-              {/* Register Form */}
+              
+              {/* Registration Form */}
               <TabsContent value="register">
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
@@ -200,13 +154,12 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>First Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
+                              <Input placeholder="First name" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={registerForm.control}
                         name="lastName"
@@ -214,28 +167,13 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Last Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <Input placeholder="Last name" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="john.doe@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     <FormField
                       control={registerForm.control}
                       name="username"
@@ -243,43 +181,51 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="johndoe" {...field} />
+                            <Input placeholder="Choose a username" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="******" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="******" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Enter your email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Create a password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Confirm your password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <Button 
                       type="submit" 
                       className="w-full" 
@@ -288,10 +234,10 @@ export default function AuthPage() {
                       {registerMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
+                          Registering...
                         </>
                       ) : (
-                        "Create Account"
+                        "Register"
                       )}
                     </Button>
                   </form>
@@ -299,38 +245,38 @@ export default function AuthPage() {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-xs text-gray-500">
-              By using WorkTrack, you agree to our terms of service and privacy policy.
-            </p>
+          <CardFooter className="flex justify-center text-sm text-gray-500">
+            WorkTrack © {new Date().getFullYear()} - All rights reserved
           </CardFooter>
         </Card>
       </div>
-
-      {/* Hero Section */}
-      <div className="hidden w-1/2 p-12 bg-gradient-to-br from-blue-600 to-indigo-800 lg:flex lg:flex-col lg:justify-center">
-        <div className="max-w-md mx-auto text-white">
-          <h1 className="mb-6 text-4xl font-bold">WorkTrack DTR Management System</h1>
-          <p className="mb-8 text-lg">
-            Streamline your workforce management with our comprehensive DTR solution.
-            Track time records, manage payroll, and analyze employee productivity - all in one place.
+      
+      {/* Right column with hero content */}
+      <div className="hidden lg:block lg:w-1/2 bg-primary p-12 text-white">
+        <div className="h-full flex flex-col justify-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            Streamline Your<br />Manpower Management
+          </h1>
+          <p className="text-lg mb-8 opacity-90">
+            WorkTrack helps you efficiently manage employees across multiple companies, streamline DTR processing, 
+            and automate payroll generation with powerful OCR technology.
           </p>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <Check className="mr-2 h-5 w-5 text-green-300" />
-              <span>Automated DTR Processing</span>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="font-medium text-xl mb-2">DTR Processing</h3>
+              <p className="opacity-80">Automated recognition of different DTR formats with AI assistance</p>
             </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-5 w-5 text-green-300" />
-              <span>Multi-Company Management</span>
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="font-medium text-xl mb-2">Payroll Automation</h3>
+              <p className="opacity-80">Generate accurate payrolls based on processed DTR entries</p>
             </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-5 w-5 text-green-300" />
-              <span>Integrated Payroll System</span>
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="font-medium text-xl mb-2">Multi-Company</h3>
+              <p className="opacity-80">Manage employees across multiple client companies efficiently</p>
             </div>
-            <div className="flex items-center">
-              <Check className="mr-2 h-5 w-5 text-green-300" />
-              <span>Real-time Reporting & Analytics</span>
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="font-medium text-xl mb-2">Insightful Reports</h3>
+              <p className="opacity-80">Access comprehensive analytics and reporting tools</p>
             </div>
           </div>
         </div>

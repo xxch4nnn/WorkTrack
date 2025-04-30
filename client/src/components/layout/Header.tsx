@@ -2,12 +2,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import NotificationCenter from "@/components/NotificationCenter";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
 
 type HeaderProps = {
   toggleSidebar: () => void;
 };
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
+  const { user, logoutMutation } = useAuth();
+  const [, setLocation] = useLocation();
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm z-10">
       <div className="container mx-auto px-4">
@@ -58,11 +63,16 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               <Tooltip content="Account Settings">
                 <DropdownMenuTrigger className="flex items-center focus:outline-none hover:opacity-80 transition-opacity">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                    <AvatarFallback>AU</AvatarFallback>
+                    <AvatarImage 
+                      src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}`} 
+                      alt={user?.username || "User"} 
+                    />
+                    <AvatarFallback>
+                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="ml-2 text-sm font-medium text-gray-700 hidden md:block">
-                    Admin User
+                    {user?.firstName} {user?.lastName}
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -81,9 +91,32 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/settings")}>
+                  Profile
+                </DropdownMenuItem>
+                {user?.role === "Admin" && (
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/settings")}>
+                    Settings
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem 
+                  className="cursor-pointer text-red-600 focus:text-red-600 hover:text-red-700" 
+                  onClick={() => {
+                    logoutMutation.mutate(undefined, {
+                      onSuccess: () => setLocation("/auth")
+                    });
+                  }}
+                  disabled={logoutMutation.isPending}
+                >
+                  {logoutMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging out...
+                    </>
+                  ) : (
+                    "Logout"
+                  )}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
