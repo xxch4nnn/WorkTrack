@@ -123,9 +123,9 @@ const DTRTable = ({ dtrs = [], isLoading, employees = [] }: DTRTableProps) => {
 
   return (
     <Card className="overflow-hidden">
-      <div className="w-full">
+      <div className="w-full overflow-auto max-h-[70vh]">
         <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Employee
