@@ -85,7 +85,7 @@ const EmployeeSidebar = ({ isOpen }: SidebarProps) => {
               {React.cloneElement(item.icon as React.ReactElement, {
                 className: cn(
                   "mr-3 h-5 w-5",
-                  location === item.href ? "text-blue-500" : "text-gray-500"
+                  location === item.href ? "text-primary" : "text-gray-500"
                 ),
               })}
               {item.label}
@@ -96,8 +96,8 @@ const EmployeeSidebar = ({ isOpen }: SidebarProps) => {
       <div className="px-4 py-2 border-t border-gray-200">
         <div className="flex items-center">
           <div className="flex-shrink-0">
-            <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
-              <span className="text-sm font-medium leading-none text-blue-700">
+            <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary-light">
+              <span className="text-sm font-medium leading-none text-primary-dark">
                 {user ? `${user.firstName[0]}${user.lastName[0]}` : 'EU'}
               </span>
             </span>

@@ -11,6 +11,24 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Lighthouse WorkTrack color theme
+        navy: "#172445",
+        blue: "#0b4d83",
+        cream: "#f5f1dd",
+        sand: "#d9c087",
+        taupe: "#c6bcb6",
+        lightBlue: "#3a7ca5",
+        gold: "#e6c555",
+        softCream: "#fcf9ee",
+        darkTaupe: "#a99e94",
+        // Primary color now maps to blue
+        primary: {
+          DEFAULT: "#0b4d83",
+          light: "#e6f0f9",
+          dark: "#092d4d",
+          foreground: "#ffffff",
+        },
+        // Original shadcn colors
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -20,10 +38,6 @@ export default {
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
-        },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
