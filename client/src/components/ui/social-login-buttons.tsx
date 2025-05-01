@@ -1,53 +1,52 @@
 import React from "react";
-import { Button } from "./button";
-import { FaGoogle, FaFacebook, FaGithub, FaLinkedin } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { FaGoogle, FaFacebook, FaApple, FaGithub } from "react-icons/fa";
 
 interface SocialLoginButtonsProps {
   onLogin: (provider: string) => void;
   className?: string;
 }
 
-export function SocialLoginButtons({ onLogin, className }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({ 
+  onLogin, 
+  className 
+}: SocialLoginButtonsProps) {
   return (
-    <div className={`grid grid-cols-2 gap-3 ${className}`}>
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50"
-        onClick={() => onLogin('google')}
+    <div className={`grid grid-cols-4 gap-2 ${className || ""}`}>
+      <Button
+        type="button"
+        variant="outline"
+        className="flex items-center justify-center"
+        onClick={() => onLogin("Google")}
       >
-        <FaGoogle className="text-red-500" />
-        <span className="text-sm">Google</span>
+        <FaGoogle className="h-4 w-4 text-red-500" />
       </Button>
-
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50"
-        onClick={() => onLogin('facebook')}
+      
+      <Button
+        type="button"
+        variant="outline"
+        className="flex items-center justify-center"
+        onClick={() => onLogin("Facebook")}
       >
-        <FaFacebook className="text-blue-600" />
-        <span className="text-sm">Facebook</span>
+        <FaFacebook className="h-4 w-4 text-blue-600" />
       </Button>
-
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50"
-        onClick={() => onLogin('github')}
+      
+      <Button
+        type="button"
+        variant="outline"
+        className="flex items-center justify-center"
+        onClick={() => onLogin("Apple")}
       >
-        <FaGithub className="text-gray-900" />
-        <span className="text-sm">GitHub</span>
+        <FaApple className="h-4 w-4" />
       </Button>
-
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50"
-        onClick={() => onLogin('linkedin')}
+      
+      <Button
+        type="button"
+        variant="outline"
+        className="flex items-center justify-center"
+        onClick={() => onLogin("GitHub")}
       >
-        <FaLinkedin className="text-blue-700" />
-        <span className="text-sm">LinkedIn</span>
+        <FaGithub className="h-4 w-4" />
       </Button>
     </div>
   );

@@ -190,7 +190,8 @@ export default function AuthPage() {
                     exit={{ opacity: 0, x: activeTab === "login" ? 20 : -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <TabsContent value="login" forceMount={activeTab === "login"}>
+                    <TabsContent value="login" forceMount>
+                      {activeTab === "login" && (
                       <Form {...loginForm}>
                         <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                           <FormField
@@ -288,10 +289,12 @@ export default function AuthPage() {
                           />
                         </form>
                       </Form>
+                      )}
                     </TabsContent>
                   
                     {/* Registration Form */}
-                    <TabsContent value="register" forceMount={activeTab === "register"}>
+                    <TabsContent value="register" forceMount>
+                      {activeTab === "register" && (
                       <Form {...registerForm}>
                         <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
@@ -465,6 +468,7 @@ export default function AuthPage() {
                           />
                         </form>
                       </Form>
+                      )}
                     </TabsContent>
                   </motion.div>
                 </AnimatePresence>
