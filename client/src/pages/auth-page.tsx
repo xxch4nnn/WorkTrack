@@ -14,6 +14,7 @@ import { Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SocialLoginButtons } from "@/components/ui/social-login-buttons";
 
 // Create schemas for login and registration
 const loginSchema = z.object({
@@ -263,6 +264,28 @@ export default function AuthPage() {
                               "Login"
                             )}
                           </Button>
+                          
+                          <div className="mt-4 relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t"></span>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-background px-2 text-muted-foreground">
+                                Or continue with
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <SocialLoginButtons 
+                            onLogin={(provider) => {
+                              toast({
+                                title: `${provider} Login Coming Soon`,
+                                description: `Login with ${provider} will be available soon.`,
+                                variant: "default",
+                              });
+                            }}
+                            className="mt-4" 
+                          />
                         </form>
                       </Form>
                     </TabsContent>
@@ -418,6 +441,28 @@ export default function AuthPage() {
                               "Register"
                             )}
                           </Button>
+                          
+                          <div className="mt-4 relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t"></span>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-background px-2 text-muted-foreground">
+                                Or sign up with
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <SocialLoginButtons 
+                            onLogin={(provider) => {
+                              toast({
+                                title: `${provider} Registration Coming Soon`,
+                                description: `Registration with ${provider} will be available soon.`,
+                                variant: "default",
+                              });
+                            }}
+                            className="mt-4" 
+                          />
                         </form>
                       </Form>
                     </TabsContent>

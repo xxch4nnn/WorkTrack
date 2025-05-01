@@ -19,6 +19,7 @@ import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import AuthPage from "@/pages/auth-page";
 import Onboarding from "@/pages/Onboarding";
+import Profile from "@/pages/Profile";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -115,6 +116,22 @@ function Router() {
         component={() => (
           <EmployeeLayout>
             <EmployeePayroll />
+          </EmployeeLayout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/profile" 
+        component={() => (
+          <EmployeeLayout>
+            <Profile />
+          </EmployeeLayout>
+        )} 
+      />
+      <ProtectedRoute 
+        path="/settings" 
+        component={() => (
+          <EmployeeLayout>
+            <Settings />
           </EmployeeLayout>
         )} 
       />

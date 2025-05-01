@@ -46,9 +46,9 @@ const EmployeeSidebar = ({ isOpen }: SidebarProps) => {
       href: "/profile",
     },
     {
-      label: "Help",
+      label: "Settings",
       icon: <HelpCircle className="mr-3 h-5 w-5" />,
-      href: "/help",
+      href: "/settings",
     },
   ];
 
