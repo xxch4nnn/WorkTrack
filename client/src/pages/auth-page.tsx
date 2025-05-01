@@ -43,10 +43,15 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Redirect to dashboard if already logged in
+  // Redirect to appropriate dashboard based on role if already logged in
   useEffect(() => {
     if (user) {
-      setLocation("/");
+      // If user is admin, redirect to admin dashboard, otherwise to employee dashboard
+      if (user.role === "Admin") {
+        setLocation("/admin");
+      } else {
+        setLocation("/");
+      }
     }
   }, [user, setLocation]);
 
