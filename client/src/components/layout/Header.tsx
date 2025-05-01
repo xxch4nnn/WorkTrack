@@ -8,9 +8,10 @@ import { Loader2 } from "lucide-react";
 
 type HeaderProps = {
   toggleSidebar: () => void;
+  isAdminView?: boolean;
 };
 
-const Header = ({ toggleSidebar }: HeaderProps) => {
+const Header = ({ toggleSidebar, isAdminView = false }: HeaderProps) => {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   return (
@@ -54,7 +55,14 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h1 className="text-xl font-medium text-primary-dark">WorkTrack</h1>
+              <h1 className="text-xl font-medium text-primary-dark">
+                {isAdminView ? "WorkTrack Admin" : "WorkTrack"}
+              </h1>
+              {isAdminView && (
+                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  ADMIN
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
