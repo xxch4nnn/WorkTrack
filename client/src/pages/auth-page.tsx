@@ -190,122 +190,149 @@ export default function AuthPage() {
                     exit={{ opacity: 0, x: activeTab === "login" ? 20 : -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <TabsContent value="login" forceMount>
-                      {activeTab === "login" && (
-                      <Form {...loginForm}>
-                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                          <FormField
-                            control={loginForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter your username" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={loginForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <div className="relative">
+                    {activeTab === "login" && (
+                      <TabsContent value="login">
+                        <Form {...loginForm}>
+                          <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                            <FormField
+                              control={loginForm.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Username</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      type={showLoginPassword ? "text" : "password"} 
-                                      placeholder="Enter your password" 
-                                      {...field} 
-                                    />
+                                    <Input placeholder="Enter your username" {...field} />
                                   </FormControl>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  >
-                                    {showLoginPassword ? (
-                                      <EyeOff className="h-4 w-4 text-gray-500" />
-                                    ) : (
-                                      <Eye className="h-4 w-4 text-gray-500" />
-                                    )}
-                                  </Button>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Checkbox id="showLoginPassword" 
-                              checked={showLoginPassword}
-                              onCheckedChange={() => setShowLoginPassword(!showLoginPassword)}
+                                  <FormMessage />
+                                </FormItem>
+                              )}
                             />
-                            <label
-                              htmlFor="showLoginPassword"
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            <FormField
+                              control={loginForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password</FormLabel>
+                                  <div className="relative">
+                                    <FormControl>
+                                      <Input 
+                                        type={showLoginPassword ? "text" : "password"} 
+                                        placeholder="Enter your password" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    >
+                                      {showLoginPassword ? (
+                                        <EyeOff className="h-4 w-4 text-gray-500" />
+                                      ) : (
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Checkbox id="showLoginPassword" 
+                                checked={showLoginPassword}
+                                onCheckedChange={() => setShowLoginPassword(!showLoginPassword)}
+                              />
+                              <label
+                                htmlFor="showLoginPassword"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Show password
+                              </label>
+                            </div>
+                            <Button 
+                              type="submit" 
+                              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary" 
+                              disabled={loginMutation.isPending}
                             >
-                              Show password
-                            </label>
-                          </div>
-                          <Button 
-                            type="submit" 
-                            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary" 
-                            disabled={loginMutation.isPending}
-                          >
-                            {loginMutation.isPending ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Logging in...
-                              </>
-                            ) : (
-                              "Login"
-                            )}
-                          </Button>
-                          
-                          <div className="mt-4 relative">
-                            <div className="absolute inset-0 flex items-center">
-                              <span className="w-full border-t"></span>
+                              {loginMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Logging in...
+                                </>
+                              ) : (
+                                "Login"
+                              )}
+                            </Button>
+                            
+                            <div className="mt-4 relative">
+                              <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t"></span>
+                              </div>
+                              <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                  Or continue with
+                                </span>
+                              </div>
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-background px-2 text-muted-foreground">
-                                Or continue with
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <SocialLoginButtons 
-                            onLogin={(provider) => {
-                              toast({
-                                title: `${provider} Login Coming Soon`,
-                                description: `Login with ${provider} will be available soon.`,
-                                variant: "default",
-                              });
-                            }}
-                            className="mt-4" 
-                          />
-                        </form>
-                      </Form>
-                      )}
-                    </TabsContent>
+                            
+                            <SocialLoginButtons 
+                              onLogin={(provider) => {
+                                toast({
+                                  title: `${provider} Login Coming Soon`,
+                                  description: `Login with ${provider} will be available soon.`,
+                                  variant: "default",
+                                });
+                              }}
+                              className="mt-4" 
+                            />
+                          </form>
+                        </Form>
+                      </TabsContent>
+                    )}
                   
                     {/* Registration Form */}
-                    <TabsContent value="register" forceMount>
-                      {activeTab === "register" && (
-                      <Form {...registerForm}>
-                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                    {activeTab === "register" && (
+                      <TabsContent value="register">
+                        <Form {...registerForm}>
+                          <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={registerForm.control}
+                                name="firstName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>First Name</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="First name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={registerForm.control}
+                                name="lastName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Last Name</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Last name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                             <FormField
                               control={registerForm.control}
-                              name="firstName"
+                              name="username"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>First Name</FormLabel>
+                                  <FormLabel>Username</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="First name" {...field} />
+                                    <Input placeholder="Choose a username" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -313,163 +340,136 @@ export default function AuthPage() {
                             />
                             <FormField
                               control={registerForm.control}
-                              name="lastName"
+                              name="email"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Last Name</FormLabel>
+                                  <FormLabel>Email</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Last name" {...field} />
+                                    <Input type="email" placeholder="Enter your email" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                          </div>
-                          <FormField
-                            control={registerForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Choose a username" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <Input type="email" placeholder="Enter your email" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={registerForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <div className="relative">
-                                  <FormControl>
-                                    <Input 
-                                      type={showRegisterPassword ? "text" : "password"} 
-                                      placeholder="Create a password" 
-                                      {...field} 
-                                    />
-                                  </FormControl>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  >
-                                    {showRegisterPassword ? (
-                                      <EyeOff className="h-4 w-4 text-gray-500" />
-                                    ) : (
-                                      <Eye className="h-4 w-4 text-gray-500" />
-                                    )}
-                                  </Button>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={registerForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Confirm Password</FormLabel>
-                                <div className="relative">
-                                  <FormControl>
-                                    <Input 
-                                      type={showRegisterConfirmPassword ? "text" : "password"} 
-                                      placeholder="Confirm your password" 
-                                      {...field} 
-                                    />
-                                  </FormControl>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  >
-                                    {showRegisterConfirmPassword ? (
-                                      <EyeOff className="h-4 w-4 text-gray-500" />
-                                    ) : (
-                                      <Eye className="h-4 w-4 text-gray-500" />
-                                    )}
-                                  </Button>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Checkbox id="showRegisterPasswords" 
-                              checked={showRegisterPassword && showRegisterConfirmPassword}
-                              onCheckedChange={() => {
-                                setShowRegisterPassword(!showRegisterPassword);
-                                setShowRegisterConfirmPassword(!showRegisterConfirmPassword);
-                              }}
+                            <FormField
+                              control={registerForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password</FormLabel>
+                                  <div className="relative">
+                                    <FormControl>
+                                      <Input 
+                                        type={showRegisterPassword ? "text" : "password"} 
+                                        placeholder="Create a password" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    >
+                                      {showRegisterPassword ? (
+                                        <EyeOff className="h-4 w-4 text-gray-500" />
+                                      ) : (
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
                             />
-                            <label
-                              htmlFor="showRegisterPasswords"
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            <FormField
+                              control={registerForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Confirm Password</FormLabel>
+                                  <div className="relative">
+                                    <FormControl>
+                                      <Input 
+                                        type={showRegisterConfirmPassword ? "text" : "password"} 
+                                        placeholder="Confirm your password" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
+                                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    >
+                                      {showRegisterConfirmPassword ? (
+                                        <EyeOff className="h-4 w-4 text-gray-500" />
+                                      ) : (
+                                        <Eye className="h-4 w-4 text-gray-500" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Checkbox id="showRegisterPasswords" 
+                                checked={showRegisterPassword && showRegisterConfirmPassword}
+                                onCheckedChange={() => {
+                                  setShowRegisterPassword(!showRegisterPassword);
+                                  setShowRegisterConfirmPassword(!showRegisterConfirmPassword);
+                                }}
+                              />
+                              <label
+                                htmlFor="showRegisterPasswords"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Show passwords
+                              </label>
+                            </div>
+                            <Button 
+                              type="submit" 
+                              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary" 
+                              disabled={registerMutation.isPending}
                             >
-                              Show passwords
-                            </label>
-                          </div>
-                          <Button 
-                            type="submit" 
-                            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary" 
-                            disabled={registerMutation.isPending}
-                          >
-                            {registerMutation.isPending ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Registering...
-                              </>
-                            ) : (
-                              "Register"
-                            )}
-                          </Button>
-                          
-                          <div className="mt-4 relative">
-                            <div className="absolute inset-0 flex items-center">
-                              <span className="w-full border-t"></span>
+                              {registerMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Registering...
+                                </>
+                              ) : (
+                                "Register"
+                              )}
+                            </Button>
+                            
+                            <div className="mt-4 relative">
+                              <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t"></span>
+                              </div>
+                              <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                  Or sign up with
+                                </span>
+                              </div>
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-background px-2 text-muted-foreground">
-                                Or sign up with
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <SocialLoginButtons 
-                            onLogin={(provider) => {
-                              toast({
-                                title: `${provider} Registration Coming Soon`,
-                                description: `Registration with ${provider} will be available soon.`,
-                                variant: "default",
-                              });
-                            }}
-                            className="mt-4" 
-                          />
-                        </form>
-                      </Form>
-                      )}
-                    </TabsContent>
+                            
+                            <SocialLoginButtons 
+                              onLogin={(provider) => {
+                                toast({
+                                  title: `${provider} Registration Coming Soon`,
+                                  description: `Registration with ${provider} will be available soon.`,
+                                  variant: "default",
+                                });
+                              }}
+                              className="mt-4" 
+                            />
+                          </form>
+                        </Form>
+                      </TabsContent>
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </Tabs>
