@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminus - System Settings</title>
+    <style>
+        /* --- Paste ALL styles from your previous working file (e.g., companies-page.html) HERE --- */
+        /* Includes :root, *, body, .sidebar, .topbar, .badge, .modal-*, .table-*, etc. */
+        :root { /* Ensure all variables are present */
+            --navy: #172445; --blue: #0b4d83; --cream: #f5f1dd; --sand: #d9c087;
+            --taupe: #c6bcb6; --light-blue: #3a7ca5; --gold: #e6c555; --soft-cream: #fcf9ee;
+            --dark-taupe: #a99e94; --white: #ffffff; --primary-color: var(--blue);
+            --secondary-color: var(--gold); --accent-color: var(--navy); --light-color: var(--cream);
+            --dark-color: var(--navy); --text-dark: #333; --text-light: var(--white);
+            --error: #d64045; --success: #4caf50; --warning: #f0a500; --info: #2196f3;
+            --leave-color: #607d8b; --resigned-color: #9e9e9e;
+            --active-color: var(--success); --inactive-color: #757575; --contract-ended-color: var(--error);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+        /* --- Assume Sidebar, Topbar, Base Styles are complete and pasted here --- */
+        .sidebar { width: 250px; background-color: var(--navy); color: var(--text-light); height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .sidebar.active { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+        .main-content { flex: 1; margin-left: 250px; padding: 20px; display: flex; flex-direction: column; max-width: calc(100% - 250px); transition: margin-left 0.3s ease; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .page-title { font-size: 24px; font-weight: bold; color: var(--navy); }
+        /* Assume Nav items, user profile, footer, buttons, badges, modals, tables are styled */
+        .nav-item.active { background-color: rgba(255, 255, 255, 0.1); border-left-color: var(--gold); }
+        .btn-primary { background-color: var(--blue); color: var(--white); padding: 8px 15px; border:none; border-radius: 6px; cursor:pointer; transition: background-color 0.3s; display: inline-flex; align-items: center; gap: 5px; font-size: 13px;}
+        .btn-primary:hover { background-color: var(--light-blue); }
+        .btn-light { background-color: var(--soft-cream); color: var(--navy); border: 1px solid var(--taupe); padding: 8px 15px; border-radius: 6px; cursor:pointer; transition: background-color 0.3s; display: inline-flex; align-items: center; gap: 5px; font-size: 13px;}
+        .btn-light:hover { background-color: var(--cream); }
+        .btn-danger { background-color: var(--error); color: var(--white); padding: 8px 15px; border:none; border-radius: 6px; cursor:pointer; transition: background-color 0.3s; display: inline-flex; align-items: center; gap: 5px; font-size: 13px;}
+        .btn-danger:hover { background-color: #c0392b; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1050; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.visible { display: flex; }
+        .modal-content { background-color: var(--white); border-radius: 8px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); width: 90%; max-width: 600px; /* Adjusted default */ max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--cream); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 600; color: var(--navy); }
+        .modal-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--dark-taupe); line-height: 1; }
+        .modal-body { padding: 20px 25px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--cream); display: flex; justify-content: flex-end; gap: 10px; background-color: var(--soft-cream); border-radius: 0 0 8px 8px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-dark); font-weight: 500; font-size: 13px; }
+        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group input[type="number"], .form-group input[type="file"], .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--taupe); border-radius: 4px; font-size: 14px; transition: all 0.3s; background-color: var(--white); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(11, 77, 131, 0.1); outline: none; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .table-card { background-color: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); overflow-x: auto; }
+        .users-table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Adjusted min-width */
+        .users-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--cream); color: var(--dark-taupe); font-weight: 600; font-size: 12px; white-space: nowrap; text-transform: uppercase; }
+        .users-table td { padding: 10px 12px; border-bottom: 1px solid var(--cream); font-size: 14px; vertical-align: middle; }
+        .users-table tbody tr:hover { background-color: var(--soft-cream); }
+        .action-icon-btn { padding: 5px; border-radius: 4px; border: none; background-color: transparent; color: var(--dark-taupe); cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; }
+        .action-icon-btn svg { width: 16px; height: 16px; }
+        .action-icon-btn:hover { background-color: var(--soft-cream); }
+        .action-icon-btn.edit-btn:hover { color: var(--blue); }
+        .action-icon-btn.delete-btn:hover { color: var(--error); }
+
+
+        /* --- Settings Page Specific Layout --- */
+        .settings-layout {
+            display: flex;
+            gap: 20px;
+            flex-grow: 1; /* Allow it to fill remaining space */
+            align-items: flex-start; /* Align items top */
+        }
+
+        .settings-menu {
+            width: 220px;
+            flex-shrink: 0; /* Prevent shrinking */
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky; /* Make menu sticky */
+            top: 85px; /* Adjust based on topbar height + padding */
+        }
+        .settings-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .settings-menu-item svg {
+            width: 18px; height: 18px;
+            margin-right: 12px;
+            color: var(--dark-taupe);
+            transition: color 0.2s;
+        }
+        .settings-menu-item:hover {
+            background-color: var(--soft-cream);
+            color: var(--blue);
+        }
+        .settings-menu-item:hover svg {
+            color: var(--blue);
+        }
+        .settings-menu-item.active {
+            background-color: rgba(11, 77, 131, 0.05); /* Light blue background */
+            border-left-color: var(--blue);
+            color: var(--blue);
+            font-weight: 500;
+        }
+        .settings-menu-item.active svg {
+             color: var(--blue);
+        }
+
+        .settings-content {
+            flex-grow: 1; /* Take remaining space */
+            min-width: 0; /* Prevent overflow issues with flex */
+        }
+        .settings-section {
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px; /* Space between sections if not using tabs */
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .settings-section.active {
+            display: block; /* Show active section */
+        }
+        .settings-section-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--cream);
+        }
+        .settings-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+        .settings-section-body {
+            padding: 20px 25px;
+        }
+        .settings-section-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--cream);
+            text-align: right;
+            background-color: var(--soft-cream);
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Specific Component Styles */
+        .profile-picture-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .profile-pic-display {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background-color: var(--taupe);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 3px solid var(--sand);
+            overflow: hidden; /* Ensure image fits */
+        }
+        .profile-pic-display img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .profile-pic-actions label { /* Style the upload button */
+            cursor: pointer;
+            padding: 8px 12px;
+            background-color: var(--soft-cream);
+            border: 1px solid var(--taupe);
+            border-radius: 4px;
+            font-size: 13px;
+            transition: background-color 0.3s;
+        }
+        .profile-pic-actions label:hover { background-color: var(--cream); }
+        .profile-pic-actions input[type="file"] { display: none; } /* Hide actual input */
+
+        /* Toggle Switch Styles (Basic Example) */
+        .toggle-switch { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
+        .toggle-switch label { font-size: 14px; color: var(--text-dark); cursor: pointer; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--taupe); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--success); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .rate-input-group { /* Group rate/multiplier inputs */
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .rate-input-group .form-group { flex: 1; min-width: 120px; }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .settings-layout { flex-direction: column; }
+            .settings-menu {
+                width: 100%;
+                position: static; /* Unstick menu */
+                margin-bottom: 20px;
+                display: flex; /* Horizontal scroll on mobile */
+                overflow-x: auto;
+                padding: 5px 0;
+            }
+             .settings-menu-item {
+                padding: 10px 15px;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                white-space: nowrap; /* Prevent wrapping */
+            }
+             .settings-menu-item.active {
+                 border-left-color: transparent;
+                 border-bottom-color: var(--blue);
+             }
+        }
+        @media (max-width: 768px) {
+            /* Sidebar and Topbar adjustments assumed from previous files */
+            .profile-picture-section { flex-direction: column; align-items: flex-start; }
+            .users-table { min-width: 500px; }
+        }
+         @media (max-width: 576px) {
+            .settings-section-body { padding: 15px; }
+             .rate-input-group .form-group { min-width: 100px; }
+         }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Sidebar HTML from previous file, ensure "Settings" nav-item is active -->
+        <div class="sidebar-header"> <a href="#" class="logo">LUMINUS</a> <button class="toggle-btn" id="sidebarToggle"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg> </button> </div>
+        <div class="user-profile"> <div class="user-avatar">AM</div> <div class="user-info"><span class="user-name">Admin Manager</span><span class="user-role">Administrator</span></div> </div>
+        <div class="nav-menu">
+           <a href="dashboard-page.html" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> </div> Dashboard </a>
+           <a href="payslip-page.html" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> </div> Payslip </a>
+           <a href="companies-page.html" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> </div> Companies </a>
+           <a href="employee.html" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> </div> Employees </a>
+           <a href="#" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg> </div> Reports </a>
+           <a href="settings-page.html" class="nav-item active"> <!-- ACTIVE --> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> </div> Settings </a>
+        </div>
+        <div class="sidebar-footer"> <a href="#"> <div style="display: flex; align-items: center;"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Support </div> </a> <a href="login-page.html"> <div style="display: flex; align-items: center;"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Logout </div> </a> <div class="lighthouse-badge"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span>Developed by Lighthouse</span> </div> </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="topbar">
+             <div style="display: flex; align-items: center;">
+                 <button class="toggle-btn" id="sidebarToggleMain" style="margin-right: 15px; color: var(--navy);">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                 </button>
+                 <div class="page-title">Settings</div>
+             </div>
+             <div class="topbar-actions">
+                 <!-- Actions might be less relevant on settings page -->
+                 <div class="topbar-icon" title="Notifications"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> <div class="notification-badge">3</div> </div>
+             </div>
+        </div>
+
+        <!-- Settings Layout -->
+        <div class="settings-layout">
+            <!-- Settings Menu (Left Side) -->
+            <div class="settings-menu">
+                <a class="settings-menu-item active" data-target="accountSettings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Account
+                </a>
+                <a class="settings-menu-item" data-target="systemPreferences">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"></path><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path><path d="M2 12h2M4.93 19.07l1.414-1.414M12 2v2M19.07 4.93l-1.414 1.414M22 12h-2M19.07 19.07l-1.414-1.414M12 22v-2M4.93 4.93l1.414 1.414"></path></svg>
+                    Preferences
+                </a>
+                 <a class="settings-menu-item" data-target="payrollConfig">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Payroll
+                </a>
+                <a class="settings-menu-item" data-target="userManagement">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Users & Roles
+                </a>
+                <a class="settings-menu-item" data-target="companyBranding">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    Branding
+                </a>
+                <a class="settings-menu-item" data-target="securitySettings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Security
+                </a>
+            </div>
+
+            <!-- Settings Content (Right Side) -->
+            <div class="settings-content">
+
+                <!-- Account Settings Section -->
+                <div id="accountSettings" class="settings-section active">
+                    <div class="settings-section-header">
+                        <h3 class="settings-section-title">User Account Settings</h3>
+                    </div>
+                    <div class="settings-section-body">
+                        <form id="accountForm">
+                            <div class="profile-picture-section">
+                                <div class="profile-pic-display" id="profilePicDisplay">AM</div> <!-- Initials or img -->
+                                <div class="profile-pic-actions">
+                                    <label for="profilePicUpload">Change Picture</label>
+                                    <input type="file" id="profilePicUpload" name="profile_picture" accept="image/*">
+                                    <!-- Optional: Add remove button -->
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="accountName">Full Name</label>
+                                <input type="text" id="accountName" name="name" value="Admin Manager"> <!-- Placeholder -->
+                            </div>
+                            <div class="form-group">
+                                <label for="accountEmail">Email Address</label>
+                                <input type="email" id="accountEmail" name="email" value="admin@luminus.com"> <!-- Placeholder -->
+                            </div>
+                             <div class="form-group">
+                                <label for="accountRole">Role</label>
+                                <input type="text" id="accountRole" name="role" value="Administrator" readonly style="background-color: var(--soft-cream); cursor: not-allowed;">
+                            </div>
+                            <hr style="margin: 20px 0; border-color: var(--cream);">
+                            <div class="form-group">
+                                <label>Password</label>
+                                <button type="button" class="btn-light" onclick="openChangePasswordModal()">Change Password</button>
+                            </div>
+                             <div class="form-group">
+                                <label>Two-Factor Authentication (2FA)</label>
+                                 <div class="toggle-switch">
+                                    <label class="switch">
+                                      <input type="checkbox" id="enable2FA" name="enable_2fa">
+                                      <span class="slider"></span>
+                                    </label>
+                                    <label for="enable2FA">Enable 2FA</label>
+                                </div>
+                                <small style="color: var(--dark-taupe); display:block; margin-top: 5px;">Enhance your account security.</small>
+                            </div>
+                        </form>
+                    </div>
+                     <div class="settings-section-footer">
+                        <button type="button" class="btn-primary" onclick="saveAccountSettings()">Save Account Changes</button>
+                    </div>
+                </div>
+
+                <!-- System Preferences Section -->
+                <div id="systemPreferences" class="settings-section">
+                     <div class="settings-section-header">
+                        <h3 class="settings-section-title">System Preferences</h3>
+                    </div>
+                     <div class="settings-section-body">
+                         <form id="preferencesForm">
+                             <div class="form-group">
+                                <label for="defaultSchedule">Default Salary Schedule (for new employees)</label>
+                                <select id="defaultSchedule" name="default_schedule">
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Semi-monthly" selected>Semi-monthly</option>
+                                    <option value="Monthly">Monthly</option>
+                                </select>
+                             </div>
+                            <div class="form-group">
+                                <label for="timeZone">Time Zone</label>
+                                <select id="timeZone" name="time_zone">
+                                    <option value="Asia/Manila" selected>Asia/Manila (PHT)</option>
+                                    <option value="Etc/GMT+8">Etc/GMT+8</option>
+                                    <!-- Add more time zones as needed -->
+                                </select>
+                             </div>
+                             <div class="form-group">
+                                <label for="dateFormat">Date Format</label>
+                                <select id="dateFormat" name="date_format">
+                                    <option value="MM/DD/YYYY">MM/DD/YYYY (e.g., 11/25/2023)</option>
+                                    <option value="DD/MM/YYYY">DD/MM/YYYY (e.g., 25/11/2023)</option>
+                                    <option value="YYYY-MM-DD" selected>YYYY-MM-DD (e.g., 2023-11-25)</option>
+                                    <option value="Mon DD, YYYY">Mon DD, YYYY (e.g., Nov 25, 2023)</option>
+                                </select>
+                             </div>
+                             <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                 <label>Notification Preferences</label>
+                                 <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="notify_email_payroll" checked><span class="slider"></span></label>
+                                    <label>Email - Payroll Confirmations</label>
+                                 </div>
+                                  <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="notify_inapp_updates"><span class="slider"></span></label>
+                                    <label>In-App - System Updates</label>
+                                 </div>
+                                  <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="notify_sms_critical" disabled><span class="slider"></span></label>
+                                    <label>SMS - Critical Alerts (Optional/Future)</label>
+                                 </div>
+                             </div>
+                             <div class="form-group">
+                                 <label>Payroll Deadline Alerts</label>
+                                  <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="alert_payroll_deadline" checked><span class="slider"></span></label>
+                                    <label>Enable email alerts for upcoming payroll deadlines</label>
+                                 </div>
+                             </div>
+                         </form>
+                     </div>
+                     <div class="settings-section-footer">
+                        <button type="button" class="btn-primary" onclick="savePreferences()">Save Preferences</button>
+                    </div>
+                </div>
+
+                <!-- Payroll Configuration Section -->
+                <div id="payrollConfig" class="settings-section">
+                     <div class="settings-section-header">
+                        <h3 class="settings-section-title">Payroll Configuration</h3>
+                    </div>
+                    <div class="settings-section-body">
+                        <form id="payrollConfigForm">
+                            <div class="form-group">
+                                <label>Payslip Format Options</label>
+                                 <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="payslip_show_incentives" checked><span class="slider"></span></label>
+                                    <label>Include Monthly Incentive Breakdown</label>
+                                 </div>
+                                 <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="payslip_show_details" checked><span class="slider"></span></label>
+                                    <label>Show Detailed Calculation (e.g., Hrs x Rate)</label>
+                                 </div>
+                                 <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" name="payslip_show_ytd"><span class="slider"></span></label>
+                                    <label>Include Year-to-Date (YTD) Totals</label>
+                                 </div>
+                            </div>
+                             <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                <label>Payroll Cycle Settings (Informational)</label>
+                                <p style="font-size: 13px; color: var(--dark-taupe);">Payroll cycle (Weekly, Semi-monthly, Monthly) is typically set per company or employee.</p>
+                                <!-- Maybe add settings for specific pay dates like 'Every Friday' or '15th and End of Month' -->
+                             </div>
+                            <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                 <label>Default Deduction Rates (%)</label>
+                                 <div class="rate-input-group">
+                                     <div class="form-group">
+                                         <label for="rateSSS">SSS (Employee Share)</label>
+                                         <input type="number" id="rateSSS" name="rate_sss" step="0.01" placeholder="e.g., 4.5">
+                                     </div>
+                                      <div class="form-group">
+                                         <label for="ratePHIC">PHIC (Employee Share)</label>
+                                         <input type="number" id="ratePHIC" name="rate_phic" step="0.01" placeholder="e.g., 2.0">
+                                     </div>
+                                     <div class="form-group">
+                                         <label for="rateHDMF">HDMF (Pag-IBIG)</label>
+                                         <input type="number" id="rateHDMF" name="rate_hdmf" step="0.01" placeholder="e.g., 100 fixed">
+                                     </div>
+                                     <!-- Add Employer Share if needed -->
+                                 </div>
+                                 <small style="color: var(--dark-taupe); display:block; margin-top: 5px;">Note: Actual deductions may follow contribution tables. Enter defaults or percentage overrides if applicable.</small>
+                            </div>
+                             <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                 <label>Default Multipliers</label>
+                                 <div class="rate-input-group">
+                                      <div class="form-group">
+                                         <label for="multiplierOT">Regular Overtime (OT)</label>
+                                         <input type="number" id="multiplierOT" name="multiplier_ot" step="0.01" value="1.25">
+                                     </div>
+                                     <div class="form-group">
+                                         <label for="multiplierRegHoliday">Regular Holiday</label>
+                                         <input type="number" id="multiplierRegHoliday" name="multiplier_reg_holiday" step="0.01" value="2.00">
+                                     </div>
+                                      <div class="form-group">
+                                         <label for="multiplierSpHoliday">Special Holiday</label>
+                                         <input type="number" id="multiplierSpHoliday" name="multiplier_sp_holiday" step="0.01" value="1.30">
+                                     </div>
+                                      <!-- Add more multipliers if needed (Night Diff, Rest Day OT, etc.) -->
+                                 </div>
+                            </div>
+                        </form>
+                     </div>
+                     <div class="settings-section-footer">
+                        <button type="button" class="btn-primary" onclick="savePayrollConfig()">Save Payroll Config</button>
+                    </div>
+                </div>
+
+                <!-- User Management Section -->
+                <div id="userManagement" class="settings-section">
+                    <div class="settings-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="settings-section-title">User & Role Management</h3>
+                        <button class="btn-primary btn-small" onclick="openAddUserModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add User
+                        </button>
+                    </div>
+                    <div class="settings-section-body" style="padding: 0;"> <!-- Remove padding for table -->
+                         <div class="table-card" style="box-shadow: none; border-radius: 0;">
+                             <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Admin Manager</td>
+                                        <td>admin@luminus.com</td>
+                                        <td>Administrator</td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                        <td>
+                                            <button class="action-icon-btn edit-btn" title="Edit User" onclick="openAddUserModal('USR001')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="action-icon-btn delete-btn" title="Delete User" disabled style="opacity:0.5; cursor: not-allowed;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button> <!-- Disable delete for self? -->
+                                        </td>
+                                    </tr>
+                                     <tr>
+                                        <td>HR Staff</td>
+                                        <td>hr@luminus.com</td>
+                                        <td>HR</td>
+                                        <td><span class="badge badge-active">Active</span></td>
+                                        <td>
+                                             <button class="action-icon-btn edit-btn" title="Edit User" onclick="openAddUserModal('USR002')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                             <button class="action-icon-btn delete-btn" title="Delete User" onclick="openDeleteUserModal('USR002', 'HR Staff')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                        </td>
+                                    </tr>
+                                     <tr>
+                                        <td>Finance Viewer</td>
+                                        <td>finance@luminus.com</td>
+                                        <td>Viewer</td>
+                                        <td><span class="badge badge-inactive">Inactive</span></td>
+                                        <td>
+                                             <button class="action-icon-btn edit-btn" title="Edit User" onclick="openAddUserModal('USR003')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                             <button class="action-icon-btn delete-btn" title="Delete User" onclick="openDeleteUserModal('USR003', 'Finance Viewer')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                             </table>
+                         </div>
+                    </div>
+                    <!-- No footer needed here as actions are in the header -->
+                </div>
+
+                <!-- Company Branding Section -->
+                <div id="companyBranding" class="settings-section">
+                    <div class="settings-section-header">
+                        <h3 class="settings-section-title">Company Branding</h3>
+                    </div>
+                     <div class="settings-section-body">
+                        <form id="brandingForm">
+                            <div class="form-group">
+                                <label>Company Logo</label>
+                                <div class="profile-picture-section" style="margin-bottom: 0;">
+                                    <div class="profile-pic-display" id="companyLogoDisplay" style="width: 120px; height: auto; min-height: 50px; border-radius: 4px; background-color: var(--soft-cream); font-size: 14px; color: var(--dark-taupe);">
+                                        <!-- <img src="path/to/current/logo.png" alt="Current Logo"> -->
+                                        Current Logo
+                                    </div>
+                                    <div class="profile-pic-actions">
+                                        <label for="companyLogoUpload">Upload New Logo</label>
+                                        <input type="file" id="companyLogoUpload" name="company_logo" accept="image/png, image/jpeg, image/svg+xml">
+                                        <small style="display: block; margin-top: 5px; color: var(--dark-taupe);">Recommended: PNG/SVG, max 2MB.</small>
+                                    </div>
+                                </div>
+                            </div>
+                             <hr style="margin: 20px 0; border-color: var(--cream);">
+                            <div class="form-group">
+                                <label>Dashboard Colors / Theme (Optional)</label>
+                                <p style="font-size: 13px; color: var(--dark-taupe);">Theme customization options can be added here (e.g., predefined themes, color pickers for primary/accent colors).</p>
+                                <!-- Example:
+                                <select name="dashboard_theme">
+                                    <option value="default">Default Luminus Theme</option>
+                                    <option value="ocean_blue">Ocean Blue</option>
+                                    <option value="sandstone">Sandstone</option>
+                                </select> -->
+                            </div>
+                        </form>
+                     </div>
+                    <div class="settings-section-footer">
+                        <button type="button" class="btn-primary" onclick="saveBranding()">Save Branding</button>
+                    </div>
+                </div>
+
+                <!-- Security Settings Section -->
+                 <div id="securitySettings" class="settings-section">
+                    <div class="settings-section-header">
+                        <h3 class="settings-section-title">Security Settings</h3>
+                    </div>
+                     <div class="settings-section-body">
+                        <form id="securityForm">
+                            <div class="form-group">
+                                <label for="sessionTimeout">Session Timeout (minutes)</label>
+                                <input type="number" id="sessionTimeout" name="session_timeout" min="5" max="120" value="30">
+                                <small style="color: var(--dark-taupe); display:block; margin-top: 5px;">Automatically log out users after inactivity.</small>
+                            </div>
+                            <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                <label>IP Address Whitelisting (Optional)</label>
+                                  <div class="toggle-switch">
+                                    <label class="switch"><input type="checkbox" id="enableIPWhitelist" name="enable_ip_whitelist"><span class="slider"></span></label>
+                                    <label for="enableIPWhitelist">Restrict logins to specific IP addresses</label>
+                                 </div>
+                                 <div id="ipWhitelistInputArea" style="margin-top: 10px; display: none;"> <!-- Hidden by default -->
+                                     <textarea name="whitelisted_ips" rows="4" placeholder="Enter allowed IP addresses, one per line (e.g., 192.168.1.100)"></textarea>
+                                 </div>
+                            </div>
+                            <hr style="margin: 20px 0; border-color: var(--cream);">
+                             <div class="form-group">
+                                <label>Login History</label>
+                                <button type="button" class="btn-light">View Login Logs</button>
+                                <small style="color: var(--dark-taupe); display:block; margin-top: 5px;">Review recent login attempts for your account or the system.</small>
+                            </div>
+                        </form>
+                     </div>
+                    <div class="settings-section-footer">
+                        <button type="button" class="btn-primary" onclick="saveSecuritySettings()">Save Security Settings</button>
+                    </div>
+                 </div>
+
+
+            </div> <!-- End Settings Content -->
+        </div> <!-- End Settings Layout -->
+    </div> <!-- End Main Content -->
+
+     <!-- Change Password Modal -->
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <form id="changePasswordForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Password</h5>
+                    <button type="button" class="modal-close-btn" onclick="closeChangePasswordModal()" aria-label="Close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="current_password" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="new_password" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirm_password" required>
+                         <!-- Add JS validation to check if newPassword == confirmPassword -->
+                         <small id="passwordMatchError" style="color: var(--error); display: none;">Passwords do not match.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-light" onclick="closeChangePasswordModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+     <!-- Add/Edit User Modal -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <form id="userForm">
+                <input type="hidden" id="editUserId" name="user_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">Add New User</h5>
+                    <button type="button" class="modal-close-btn" onclick="closeAddUserModal()" aria-label="Close">&times;</button>
+                </div>
+                <div class="modal-body">
+                     <div class="form-group">
+                        <label for="userName">Full Name</label>
+                        <input type="text" id="userName" name="name" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="userEmail">Email Address</label>
+                        <input type="email" id="userEmail" name="email" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="userRole">Assign Role</label>
+                        <select id="userRole" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="Administrator">Administrator</option>
+                            <option value="HR">HR</option>
+                            <option value="Viewer">Viewer</option>
+                             <!-- Add more roles if needed -->
+                        </select>
+                    </div>
+                     <div class="form-group" id="passwordFieldContainer"> <!-- Hide for edit? -->
+                        <label for="userPassword">Temporary Password</label>
+                        <input type="password" id="userPassword" name="password" required>
+                         <small style="color: var(--dark-taupe); display:block; margin-top: 5px;">User will be prompted to change this on first login.</small>
+                    </div>
+                     <div class="form-group">
+                         <label>Status</label>
+                          <div class="toggle-switch">
+                             <label class="switch"><input type="checkbox" id="userStatusActive" name="is_active" checked><span class="slider"></span></label>
+                             <label for="userStatusActive">User Active</label>
+                          </div>
+                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-light" onclick="closeAddUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+     <!-- Delete User Confirmation Modal -->
+    <div class="modal-overlay" id="deleteUserConfirmModal">
+         <div class="modal-content confirm-delete">
+            <div class="modal-header"> <h5 class="modal-title">Confirm User Deletion</h5> <button type="button" class="modal-close-btn" onclick="closeDeleteUserModal()" aria-label="Close">&times;</button> </div>
+            <div class="modal-body"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <p id="deleteUserMessage">Are you sure you want to delete the user:</p> <strong id="deleteUserName">User Name Here</strong>? <p style="font-size: 12px; color: var(--error); margin-top: 10px;">This action cannot be undone.</p> </div>
+            <div class="modal-footer"> <button type="button" class="btn-light" onclick="closeDeleteUserModal()">Cancel</button> <button type="button" class="btn-danger" onclick="confirmUserDelete()">Confirm Delete</button> </div>
+         </div>
+    </div>
+
+
+    <script>
+        // --- Sidebar Toggle Script (Keep as is) ---
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleButtons = document.querySelectorAll('#sidebarToggle, #sidebarToggleMain');
+        toggleButtons.forEach(button => { button.addEventListener('click', () => { const isActive = sidebar.classList.toggle('active'); mainContent.style.marginLeft = isActive && window.innerWidth > 768 ? '250px' : '0'; }); });
+        document.addEventListener('click', function(event) { const isClickInsideSidebar = sidebar.contains(event.target); const isToggleButton = Array.from(toggleButtons).some(btn => btn.contains(event.target)); if (!isClickInsideSidebar && !isToggleButton && sidebar.classList.contains('active') && window.innerWidth <= 768) { sidebar.classList.remove('active'); mainContent.style.marginLeft = '0'; } });
+        window.addEventListener('resize', () => { if (sidebar.classList.contains('active') && window.innerWidth > 768) { mainContent.style.marginLeft = '250px'; } else { mainContent.style.marginLeft = '0'; } });
+        if (sidebar.classList.contains('active') && window.innerWidth > 768) { mainContent.style.marginLeft = '250px'; }
+
+        // --- Settings Navigation ---
+        const settingsMenuItems = document.querySelectorAll('.settings-menu-item');
+        const settingsSections = document.querySelectorAll('.settings-section');
+
+        settingsMenuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.getAttribute('data-target');
+
+                // Update Menu Active State
+                settingsMenuItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // Update Content Active State
+                settingsSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // --- Modal Handling ---
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        const addUserModal = document.getElementById('addUserModal');
+        const deleteUserConfirmModal = document.getElementById('deleteUserConfirmModal');
+        const userForm = document.getElementById('userForm');
+        const userModalTitle = document.getElementById('userModalTitle');
+        const editUserIdInput = document.getElementById('editUserId');
+        const passwordFieldContainer = document.getElementById('passwordFieldContainer'); // For Add/Edit User
+        const deleteUserNameSpan = document.getElementById('deleteUserName');
+        let userToDeleteId = null;
+
+        function openChangePasswordModal() { changePasswordModal.classList.add('visible'); /* Clear fields if needed */ }
+        function closeChangePasswordModal() { changePasswordModal.classList.remove('visible'); }
+
+        function openAddUserModal(userId = null) {
+            userForm.reset();
+            editUserIdInput.value = '';
+            // passwordFieldContainer.style.display = 'block'; // Show password field for add
+            // document.getElementById('userPassword').required = true;
+
+            if (userId) {
+                // Edit mode
+                userModalTitle.textContent = 'Edit User';
+                editUserIdInput.value = userId;
+                // passwordFieldContainer.style.display = 'none'; // Hide password field for edit
+                // document.getElementById('userPassword').required = false;
+                // TODO: Fetch user data and populate form
+                 console.log(`Editing user ID: ${userId}. Fetch data...`);
+                 document.getElementById('userName').value = "Fetched User Name";
+                 document.getElementById('userEmail').value = "fetched@email.com";
+                 document.getElementById('userRole').value = "HR";
+                 document.getElementById('userStatusActive').checked = true;
+            } else {
+                // Add mode
+                userModalTitle.textContent = 'Add New User';
+            }
+            addUserModal.classList.add('visible');
+        }
+        function closeAddUserModal() { addUserModal.classList.remove('visible'); }
+
+        function openDeleteUserModal(userId, userName) {
+            userToDeleteId = userId;
+            deleteUserNameSpan.textContent = userName;
+            deleteUserConfirmModal.classList.add('visible');
+        }
+        function closeDeleteUserModal() { userToDeleteId = null; deleteUserConfirmModal.classList.remove('visible'); }
+
+        function confirmUserDelete() {
+            if (userToDeleteId) {
+                console.log(`Deleting user ID: ${userToDeleteId}`);
+                // TODO: API Call to delete user
+                closeDeleteUserModal();
+                 // TODO: Refresh user table
+            }
+        }
+
+        // --- Form Submissions (Placeholders) ---
+        function saveAccountSettings() {
+            console.log("Saving Account Settings...");
+            // TODO: Collect data from #accountForm and send API request
+            alert("Account settings saved (placeholder)."); // Placeholder feedback
+        }
+        function savePreferences() {
+             console.log("Saving Preferences...");
+             // TODO: Collect data from #preferencesForm and send API request
+              alert("Preferences saved (placeholder).");
+        }
+         function savePayrollConfig() {
+             console.log("Saving Payroll Config...");
+              // TODO: Collect data from #payrollConfigForm and send API request
+               alert("Payroll config saved (placeholder).");
+        }
+         function saveBranding() {
+             console.log("Saving Branding...");
+              // TODO: Handle logo upload and theme data, send API request
+               alert("Branding saved (placeholder).");
+        }
+        function saveSecuritySettings() {
+            console.log("Saving Security Settings...");
+             // TODO: Collect data from #securityForm and send API request
+              alert("Security settings saved (placeholder).");
+        }
+
+        // Change Password Form Submit
+        document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            const errorMsg = document.getElementById('passwordMatchError');
+
+            if (newPass !== confirmPass) {
+                errorMsg.style.display = 'block';
+                return; // Stop submission
+            }
+            errorMsg.style.display = 'none';
+            console.log("Submitting password change...");
+            // TODO: API Call to change password (send currentPass, newPass)
+            alert("Password changed successfully (placeholder).");
+            closeChangePasswordModal();
+        });
+
+        // Add/Edit User Form Submit
+        userForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(userForm);
+            const userData = Object.fromEntries(formData.entries());
+             userData.is_active = document.getElementById('userStatusActive').checked; // Get checkbox value
+            const userId = editUserIdInput.value;
+
+            if (userId) {
+                console.log("Updating User:", userId, userData);
+                 // TODO: API call to update user (PATCH/PUT)
+            } else {
+                console.log("Adding New User:", userData);
+                 // TODO: API call to add user (POST)
+            }
+            alert("User saved (placeholder).");
+             closeAddUserModal();
+             // TODO: Refresh user table
+        });
+
+
+         // --- Specific Component JS ---
+
+        // Profile Picture Preview (Basic Example)
+         const profilePicInput = document.getElementById('profilePicUpload');
+         const profilePicDisplay = document.getElementById('profilePicDisplay');
+         profilePicInput?.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && profilePicDisplay) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                     // Replace initials with image preview
+                     profilePicDisplay.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
+                 }
+                reader.readAsDataURL(file);
+            }
+         });
+        // Similar logic for companyLogoUpload...
+
+        // IP Whitelist Text Area Toggle
+        const enableIPWhitelist = document.getElementById('enableIPWhitelist');
+        const ipWhitelistInputArea = document.getElementById('ipWhitelistInputArea');
+         enableIPWhitelist?.addEventListener('change', function() {
+            ipWhitelistInputArea.style.display = this.checked ? 'block' : 'none';
+         });
+         // Initial check in case it's loaded checked
+         if (enableIPWhitelist?.checked) {
+             ipWhitelistInputArea.style.display = 'block';
+         }
+
+
+        console.log("Settings page loaded.");
+
+    </script>
+
+</body>
+</html>

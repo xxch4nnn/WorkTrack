@@ -1,242 +1,268 @@
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { CalendarIcon, Download, FileText, Search, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Download, Search, Filter, DollarSign, Clock, Printer } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PayslipView from "@/components/payroll/PayslipView";
 
-type PayslipType = {
+// Payslip type definition
+interface Payslip {
   id: number;
+  employeeId: number;
   periodStart: string;
   periodEnd: string;
-  payDate: string;
-  basicPay: number;
-  overtimePay: number;
-  deductions: {
-    tax: number;
-    sss: number;
-    philhealth: number;
-    pagibig: number;
-    others: number;
-  };
+  dateIssued: string;
+  grossPay: number;
   netPay: number;
-};
+  status: "Pending" | "Paid" | "Processing";
+  payrollId: number;
+}
 
-const EmployeePayroll = () => {
-  const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState("2023");
-  
+export default function EmployeePayroll() {
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
+
   // Fetch employee payslips
-  const { data: payslips, isLoading } = useQuery({
+  const { data: payslips = [], isLoading } = useQuery({
     queryKey: ["/api/employee/payslips"],
-    enabled: !!user,
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/employee/payslips");
+      return await res.json();
+    },
   });
 
-  // Mock data for display
-  const mockPayslips: PayslipType[] = [
-    {
-      id: 1,
-      periodStart: "2023-05-01",
-      periodEnd: "2023-05-15",
-      payDate: "2023-05-20",
-      basicPay: 18000,
-      overtimePay: 1500,
-      deductions: { tax: 1950, sss: 800, philhealth: 400, pagibig: 200, others: 0 },
-      netPay: 16150,
-    },
-    {
-      id: 2,
-      periodStart: "2023-04-16",
-      periodEnd: "2023-04-30",
-      payDate: "2023-05-05",
-      basicPay: 18000,
-      overtimePay: 0,
-      deductions: { tax: 1800, sss: 800, philhealth: 400, pagibig: 200, others: 0 },
-      netPay: 14800,
-    },
-    {
-      id: 3,
-      periodStart: "2023-04-01",
-      periodEnd: "2023-04-15",
-      payDate: "2023-04-20",
-      basicPay: 18000,
-      overtimePay: 2250,
-      deductions: { tax: 2025, sss: 800, philhealth: 400, pagibig: 200, others: 300 },
-      netPay: 16525,
-    },
-  ];
+  // Filter payslips based on search query and selected period
+  const filteredPayslips = payslips.filter((payslip: Payslip) => {
+    // Filter by search query (match against date or amount)
+    const matchesSearch = !searchQuery || 
+      formatDate(payslip.dateIssued).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payslip.grossPay.toString().includes(searchQuery) ||
+      payslip.netPay.toString().includes(searchQuery);
+    
+    // Filter by period if not "all"
+    const matchesPeriod = selectedPeriod === "all" || getPayslipPeriod(payslip) === selectedPeriod;
+    
+    return matchesSearch && matchesPeriod;
+  });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(amount);
+  // Helper to determine which period a payslip belongs to
+  function getPayslipPeriod(payslip: Payslip): string {
+    const date = new Date(payslip.dateIssued);
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const payslipMonth = date.getMonth();
+    const payslipYear = date.getFullYear();
+
+    if (payslipYear === currentYear) {
+      if (payslipMonth === currentMonth) return "current";
+      if (payslipMonth === currentMonth - 1) return "previous";
+      return "older";
+    }
+    return "older";
+  }
+
+  // Handle view payslip
+  const handleViewPayslip = (payslip: Payslip) => {
+    setSelectedPayslip(payslip);
+    setIsViewDialogOpen(true);
+  };
+
+  // Handle download payslip (placeholder for now)
+  const handleDownloadPayslip = (payslip: Payslip) => {
+    // This would be implemented to download the actual payslip PDF/document
+    alert(`Downloading payslip #${payslip.id} issued on ${formatDate(payslip.dateIssued)}`);
+  };
+
+  // Render badge based on status
+  const renderStatusBadge = (status: string) => {
+    let badgeVariant = "default";
+    
+    switch (status) {
+      case "Paid":
+        badgeVariant = "success";
+        break;
+      case "Pending":
+        badgeVariant = "warning";
+        break;
+      case "Processing":
+        badgeVariant = "default";
+        break;
+      default:
+        badgeVariant = "secondary";
+    }
+    
+    return (
+      <Badge variant={badgeVariant as any} className="capitalize">
+        {status}
+      </Badge>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">My Payslips</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <Download className="w-4 h-4" />
-            Download All
-          </Button>
-        </div>
-      </div>
-
-      {/* Earnings Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings (2023)</CardTitle>
-            <CardDescription>Year to date</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-2xl font-bold text-green-700">{formatCurrency(105000)}</p>
-                <p className="text-xs text-gray-500">+5.2% from last year</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Monthly</CardTitle>
-            <CardDescription>Based on 2023</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-2xl font-bold text-blue-700">{formatCurrency(30000)}</p>
-                <p className="text-xs text-gray-500">Across 3.5 months</p>
-              </div>
-              <Calendar className="h-8 w-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Overtime Earnings</CardTitle>
-            <CardDescription>Year to date</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-2xl font-bold text-purple-700">{formatCurrency(15750)}</p>
-                <p className="text-xs text-gray-500">15% of total earnings</p>
-              </div>
-              <Clock className="h-8 w-8 text-purple-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Payslips List */}
+    <div className="container mx-auto py-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Payslip History</CardTitle>
-          <CardDescription>View and download your payslips</CardDescription>
+          <CardTitle className="text-2xl font-bold text-primary">My Payslips</CardTitle>
+          <CardDescription>
+            View and download your payslip history
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="2023" defaultChecked>2023</TabsTrigger>
-              <TabsTrigger value="2022">2022</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search payslips" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          </div>
-          
-          {mockPayslips.length === 0 ? (
-            <div className="text-center py-10 border rounded-md">
-              <DollarSign className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-              <h3 className="text-lg font-medium">No Payslips Available</h3>
-              <p className="text-gray-500">There are no payslips for the selected period.</p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <div className="grid grid-cols-12 gap-4 p-4 font-medium text-sm text-gray-500 border-b">
-                <div className="col-span-4">Pay Period</div>
-                <div className="col-span-2">Pay Date</div>
-                <div className="col-span-2">Gross Pay</div>
-                <div className="col-span-2">Deductions</div>
-                <div className="col-span-2">Net Pay</div>
-              </div>
+          <Tabs defaultValue="list" className="space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+              <TabsList>
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  List View
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Calendar View
+                </TabsTrigger>
+              </TabsList>
               
-              {mockPayslips.map((payslip) => {
-                const totalDeductions = Object.values(payslip.deductions).reduce((sum, val) => sum + val, 0);
-                const grossPay = payslip.basicPay + payslip.overtimePay;
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="relative w-64">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input 
+                    placeholder="Search payslips..." 
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 
-                return (
-                  <div key={payslip.id} className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-gray-50">
-                    <div className="col-span-4 flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                      <div>
-                        <p className="font-medium">{new Date(payslip.periodStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {new Date(payslip.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                        <p className="text-xs text-gray-500">Pay Period</p>
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      <p>{new Date(payslip.payDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-                      <p className="text-xs text-gray-500">Pay Date</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="font-medium">{formatCurrency(grossPay)}</p>
-                      {payslip.overtimePay > 0 && (
-                        <p className="text-xs text-blue-600">
-                          Incl. {formatCurrency(payslip.overtimePay)} OT
-                        </p>
-                      )}
-                    </div>
-                    <div className="col-span-2">
-                      <p className="font-medium text-red-600">-{formatCurrency(totalDeductions)}</p>
-                      <p className="text-xs text-gray-500">Tax, SSS, etc.</p>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-green-600">{formatCurrency(payslip.netPay)}</p>
-                        <p className="text-xs text-gray-500">Final Amount</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Periods</SelectItem>
+                    <SelectItem value="current">Current Month</SelectItem>
+                    <SelectItem value="previous">Previous Month</SelectItem>
+                    <SelectItem value="older">Older</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-          
-          <div className="flex justify-center mt-4">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Printer className="h-4 w-4" />
-              Print Tax Summary
-            </Button>
-          </div>
+            
+            <TabsContent value="list" className="space-y-6">
+              {isLoading ? (
+                <div className="py-24 text-center">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading your payslips...</p>
+                </div>
+              ) : filteredPayslips.length === 0 ? (
+                <div className="py-24 text-center border rounded-lg">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium mb-2">No payslips found</h3>
+                  <p className="text-muted-foreground">
+                    {searchQuery ? "No payslips match your search criteria." : "You have no payslips available yet."}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-hidden">
+                  <table className="w-full min-w-[600px] caption-bottom text-sm">
+                    <thead className="bg-muted/50">
+                      <tr className="border-b">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Pay Period</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Issue Date</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Gross Pay</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Net Pay</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPayslips.map((payslip: Payslip) => (
+                        <tr key={payslip.id} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="p-4 align-middle">{formatDate(payslip.periodStart)} - {formatDate(payslip.periodEnd)}</td>
+                          <td className="p-4 align-middle">{formatDate(payslip.dateIssued)}</td>
+                          <td className="p-4 align-middle">{formatCurrency(payslip.grossPay)}</td>
+                          <td className="p-4 align-middle font-medium">{formatCurrency(payslip.netPay)}</td>
+                          <td className="p-4 align-middle">{renderStatusBadge(payslip.status)}</td>
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleViewPayslip(payslip)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleDownloadPayslip(payslip)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="calendar" className="space-y-6">
+              <div className="py-24 text-center border rounded-lg">
+                <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium mb-2">Calendar View Coming Soon</h3>
+                <p className="text-muted-foreground">
+                  We're working on a calendar view to make it easier to track your payslips by date.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
+
+      {/* Payslip View Dialog */}
+      {selectedPayslip && (
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Payslip Details</DialogTitle>
+              <DialogDescription>
+                Pay period: {formatDate(selectedPayslip.periodStart)} - {formatDate(selectedPayslip.periodEnd)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              <PayslipView payslip={selectedPayslip} />
+            </div>
+            <div className="flex justify-end mt-4 gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsViewDialogOpen(false)}
+              >
+                Close
+              </Button>
+              <Button
+                variant="default"
+                className="gap-2"
+                onClick={() => handleDownloadPayslip(selectedPayslip)}
+              >
+                <Download className="h-4 w-4" /> Download
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
-};
-
-export default EmployeePayroll;
+}

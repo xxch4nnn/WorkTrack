@@ -20,6 +20,8 @@ import Settings from "@/pages/Settings";
 import AuthPage from "@/pages/auth-page";
 import Onboarding from "@/pages/Onboarding";
 import Profile from "@/pages/Profile";
+import TermsAndConditions from "@/pages/TermsAndConditions";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 

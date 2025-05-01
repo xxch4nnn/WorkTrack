@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminus - Solaire Manpower Services</title>
+    <style>
+        :root {
+            /* Main color palette */
+            --navy: #172445;
+            --blue: #0b4d83;
+            --cream: #f5f1dd;
+            --sand: #d9c087;
+            --taupe: #c6bcb6;
+            
+            /* Complementary colors */
+            --light-blue: #3a7ca5;
+            --gold: #e6c555;
+            --soft-cream: #fcf9ee;
+            --dark-taupe: #a99e94;
+            --white: #ffffff;
+            
+            /* Functional colors */
+            --primary-color: var(--blue);
+            --secondary-color: var(--gold);
+            --accent-color: var(--navy);
+            --light-color: var(--cream);
+            --dark-color: var(--navy);
+            --text-dark: #333;
+            --text-light: var(--white);
+            --error: #d64045;
+            --success: #4caf50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--cream);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+        }
+        
+        .container {
+            display: flex;
+            width: 80%;
+            max-width: 900px;
+            height: 600px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background-color: var(--navy);
+            color: var(--text-light);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .left-panel .logo {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-light);
+            position: relative;
+        }
+        
+        .left-panel .logo::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 60px;
+            height: 4px;
+            background-color: var(--gold);
+        }
+        
+        .left-panel h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        
+        .left-panel p {
+            margin-bottom: 30px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .features {
+            margin-top: 40px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            background-color: var(--soft-cream);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .login-header h1 {
+            color: var(--navy);
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .login-form {
+            width: 100%;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--taupe);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: var(--white);
+        }
+        
+        .form-group input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(11, 77, 131, 0.2);
+            outline: none;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 25px;
+        }
+        
+        .forgot-password a {
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .forgot-password a:hover {
+            color: var(--light-blue);
+            text-decoration: underline;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--blue);
+            color: var(--text-light);
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .login-button:hover {
+            background-color: var(--navy);
+        }
+        
+        .alt-login {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .alt-login p {
+            color: var(--dark-taupe);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .alt-login p::before,
+        .alt-login p::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background-color: #ddd;
+        }
+        
+        .alt-login p::before {
+            left: 0;
+        }
+        
+        .alt-login p::after {
+            right: 0;
+        }
+        
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .social-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--white);
+            border: 1px solid var(--taupe);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .social-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: var(--sand);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                width: 95%;
+            }
+            
+            .left-panel {
+                padding: 30px;
+            }
+            
+            .features {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo">LUMINUS</div>
+            <h2>Welcome to Solaire Manpower Services</h2>
+            <p>Log in to access your personalized dashboard and manage your workforce efficiently.</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <span>Staff Management</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <span>Resource Planning</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <span>Performance Tracking</span>
+                </div>
+            </div>
+            
+            <div style="position: absolute; bottom: 20px; left: 40px; font-size: 12px; opacity: 0.7;">
+                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;">
+                        <path d="M20 8.04L12 2L4 8.04M20 8.04V20H4V8.04"/>
+                        <path d="M15 14a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                    </svg>
+                    <span>Developed by Lighthouse</span>
+                </div>
+                <div style="font-size: 10px;">Guiding your digital transformation</div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="login-header">
+                <h1>Log In to Your Account</h1>
+            </div>
+            
+            <form class="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="login-button">Log In</button>
+                
+                <div class="alt-login">
+                    <p>Or continue with</p>
+                    <div class="social-login">
+                        <div class="social-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#DB4437" stroke="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.35 5.35l-2.79 2.79c-.32-.71-.77-1.35-1.34-1.91-.57-.57-1.21-1.02-1.92-1.34l2.79-2.79c.96.49 1.79 1.14 2.48 1.97.68.84 1.17 1.79 1.78 2.28z"></path>
+                                <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"></path>
+                            </svg>
+                        </div>
+                        <div class="social-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#1877F2" stroke="none">
+                                <path d="M20.9 2H3.1C2.5 2 2 2.5 2 3.1v17.8c0 .6.5 1.1 1.1 1.1h9.6v-7.8h-2.6v-3h2.6V9.4c0-2.6 1.6-4 3.9-4 1.1 0 2.1.1 2.4.1v2.8h-1.6c-1.3 0-1.5.6-1.5 1.5v1.9h3l-.4 3h-2.6V22h5.1c.6 0 1.1-.5 1.1-1.1V3.1c0-.6-.5-1.1-1.1-1.1z"></path>
+                            </svg>
+                        </div>
+                        <div class="social-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#000000" stroke="none">
+                                <path d="M22.2 12c0-.8-.1-1.6-.2-2.4H12v4.5h5.7c-.2 1.3-1 2.5-2.1 3.2v2.7h3.5C21 18.1 22.2 15.3 22.2 12z" fill="#4285F4"></path>
+                                <path d="M12 22.5c2.9 0 5.4-1 7.1-2.6l-3.5-2.7c-1 .7-2.2 1-3.6 1-2.8 0-5.1-1.9-6-4.4H2.5v2.8C4.1 20 7.8 22.5 12 22.5z" fill="#34A853"></path>
+                                <path d="M6 13.8c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8V7.4H2.5C1.9 8.8 1.5 10.4 1.5 12s.4 3.2 1 4.6l3.5-2.8z" fill="#FBBC05"></path>
+                                <path d="M12 6.6c1.6 0 3 .5 4.1 1.6l3.1-3.1C17.3 3.4 14.9 2.5 12 2.5c-4.2 0-7.9 2.5-9.5 6l3.5 2.8c.9-2.6 3.2-4.7 6-4.7z" fill="#EA4335"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <footer style="position: fixed; bottom: 10px; text-align: center; font-size: 12px; color: var(--cream); opacity: 0.7;">
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <span>© 2025 Solaire Manpower Services | </span>
+            <a href="#" style="color: var(--cream); margin-left: 5px; text-decoration: none;">Privacy Policy</a>
+            <span style="margin: 0 5px;">|</span>
+            <a href="#" style="color: var(--cream); text-decoration: none;">Terms of Service</a>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminus - Payslip Details</title> <!-- Updated Title -->
+    <style>
+        /* --- Copy ALL styles from payslip-page.html here --- */
+        /* Includes :root, *, body, sidebar, topbar, stat-card, badge, etc. */
+        :root { /* Shortened for brevity - Assume all variables are here */
+            --navy: #172445; --blue: #0b4d83; --cream: #f5f1dd; --sand: #d9c087;
+            --taupe: #c6bcb6; --light-blue: #3a7ca5; --gold: #e6c555; --soft-cream: #fcf9ee;
+            --dark-taupe: #a99e94; --white: #ffffff; --primary-color: var(--blue);
+            --secondary-color: var(--gold); --accent-color: var(--navy); --light-color: var(--cream);
+            --dark-color: var(--navy); --text-dark: #333; --text-light: var(--white);
+            --error: #d64045; --success: #4caf50; --warning: #f0a500; --info: #2196f3;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+        .sidebar { /* Assume full sidebar styles are here */ width: 250px; background-color: var(--navy); color: var(--text-light); height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; transition: all 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 100; }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar-header, .user-profile, .nav-menu, .nav-item, .nav-icon, .sidebar-footer, .lighthouse-badge { /* Assume styles exist */ }
+        .nav-item.active { background-color: rgba(255,255,255,0.1); border-left-color: var(--gold); }
+        .main-content { flex: 1; margin-left: 250px; padding: 20px; display: flex; flex-direction: column; max-width: calc(100% - 250px); }
+        .topbar { /* Assume full topbar styles are here */ display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .page-title { font-size: 24px; font-weight: bold; color: var(--navy); }
+        .topbar-actions, .search-container, .search-input, .search-icon, .topbar-icon, .notification-badge { /* Assume styles exist */ }
+        .content-wrapper { flex: 1; display: flex; flex-direction: column; gap: 20px; } /* Stacks content vertically */
+
+        /* --- NEW/ADAPTED Styles for Payslip View --- */
+        .payslip-view-actions {
+            display: flex;
+            justify-content: space-between; /* Pushes Back button left, others right */
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .payslip-view-actions .action-group {
+            display: flex;
+            gap: 10px;
+        }
+        .payslip-view-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.3s;
+            display: inline-flex; /* Align icon and text */
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-primary { background-color: var(--blue); color: var(--white); }
+        .btn-primary:hover { background-color: var(--light-blue); }
+        .btn-secondary { background-color: var(--gold); color: var(--navy); }
+        .btn-secondary:hover { background-color: var(--sand); }
+        .btn-light { background-color: var(--soft-cream); color: var(--navy); border: 1px solid var(--taupe); }
+        .btn-light:hover { background-color: var(--cream); }
+
+        .payslip-detail-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 30px; /* More padding for view */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            font-size: 14px;
+            line-height: 1.6;
+            width: 100%;
+            max-width: 900px; /* Control max width for readability */
+            margin: 0 auto; /* Center the card */
+        }
+
+        .payslip-branding { /* Optional Header */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--navy);
+        }
+        .payslip-branding .logo {
+             font-size: 28px;
+             font-weight: bold;
+             color: var(--navy);
+             display: flex;
+             align-items: center;
+         }
+        .payslip-branding .logo::before { /* Logo bar from sidebar */
+             content: ""; display: inline-block; width: 6px; height: 22px;
+             background-color: var(--gold); margin-right: 8px;
+         }
+        .payslip-branding .client-company {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--dark-taupe);
+        }
+
+
+        .payslip-detail-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
+            gap: 15px 20px; /* Row and column gap */
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed var(--taupe);
+        }
+        .payslip-detail-header .info-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--dark-taupe);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+        .payslip-detail-header .info-item strong {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .payslip-section {
+            margin-bottom: 25px;
+        }
+        .payslip-section h4 {
+            font-size: 16px; /* Slightly larger heading */
+            font-weight: 600;
+            color: var(--blue);
+            margin-bottom: 15px; /* More space below heading */
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--cream);
+        }
+
+        .payslip-items-grid { /* Use grid for alignment */
+             display: grid;
+             grid-template-columns: 1fr auto; /* Label | Value */
+             gap: 8px 15px; /* Row and column gap */
+         }
+        .payslip-item-label {
+             color: var(--text-dark);
+             grid-column: 1 / 2;
+         }
+        .payslip-item-value {
+             font-weight: 500;
+             color: var(--navy);
+             text-align: right;
+             grid-column: 2 / 3;
+             white-space: nowrap; /* Prevent wrapping */
+         }
+         .payslip-item-detail { /* Smaller text for details like (hrs x rate) */
+            font-size: 11px;
+            color: var(--dark-taupe);
+             display: inline-block; /* Keep it on the same line */
+             margin-left: 8px;
+             font-weight: 400;
+         }
+
+        .payslip-subtotal {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid var(--cream);
+            font-weight: bold;
+            display: grid; /* Use grid like items */
+            grid-template-columns: 1fr auto;
+            gap: 8px 15px;
+        }
+        .payslip-subtotal .payslip-item-label {
+             grid-column: 1 / 2;
+        }
+         .payslip-subtotal .payslip-item-value {
+             grid-column: 2 / 3;
+        }
+
+
+        .payslip-net-summary {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--navy);
+        }
+
+        .payslip-net-pay { /* Reusing style */
+             font-size: 18px;
+             font-weight: bold;
+             color: var(--success);
+             padding: 12px 15px;
+             background-color: var(--soft-cream);
+             border: 1px solid var(--sand);
+             border-radius: 6px;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 10px;
+        }
+        .payslip-net-pay span:first-child { /* Label */
+             color: var(--navy);
+        }
+
+
+        .payslip-amount-words {
+            font-size: 13px;
+            color: var(--dark-taupe);
+            margin-top: 10px;
+            text-align: right;
+        }
+         .payslip-amount-words span {
+            font-weight: 500;
+            font-style: italic;
+         }
+
+
+        .payslip-print-footer {
+             margin-top: 40px;
+             padding-top: 15px;
+             border-top: 1px solid var(--cream);
+             text-align: center;
+             font-size: 11px;
+             color: var(--dark-taupe);
+             display: none; /* Hidden by default, shown only on print */
+         }
+
+        .toggle-btn { display: none; /* Ensure toggle is usable */ }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-250px); }
+            .main-content { margin-left: 0; max-width: 100%; }
+            .toggle-btn { display: block; } /* Show toggle */
+             .payslip-view-actions { flex-direction: column; gap: 15px; padding: 15px; }
+             .payslip-view-actions .action-group { width: 100%; justify-content: space-around; } /* Spread buttons */
+             .payslip-view-actions button { width: 48%; /* Adjust button width */ }
+             .payslip-detail-card { padding: 20px; }
+             .payslip-branding { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+
+        @media (max-width: 576px) {
+            .page-title { font-size: 20px; }
+            .topbar-actions .search-container { display: none; }
+             .payslip-detail-card { padding: 15px; font-size: 13px; }
+             .payslip-detail-header { grid-template-columns: 1fr; /* Stack header info */ gap: 10px; }
+             .payslip-section h4 { font-size: 15px; margin-bottom: 10px; }
+             .payslip-items-grid { gap: 5px 10px; }
+             .payslip-item-value { font-size: 13px; }
+             .payslip-net-pay { font-size: 16px; padding: 10px; }
+             .payslip-amount-words { text-align: center; margin-top: 15px; }
+        }
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                background-color: var(--white) !important;
+                display: block !important;
+                color: #000 !important;
+                font-size: 10pt !important; /* Base print font size */
+            }
+            .sidebar, .topbar, .payslip-view-actions, .toggle-btn {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+            }
+            .content-wrapper {
+                padding: 0 !important;
+                gap: 0 !important;
+            }
+            .payslip-detail-card {
+                 width: 100% !important;
+                 max-width: 100% !important;
+                 margin: 0 !important;
+                 padding: 20px !important; /* Adjust padding for print */
+                 border-radius: 0 !important;
+                 box-shadow: none !important;
+                 border: 1px solid #ccc !important;
+                 font-size: 9.5pt !important;
+            }
+
+            .payslip-branding .logo { font-size: 18pt !important; color: #000 !important; }
+            .payslip-branding .logo::before { background-color: #555 !important; }
+            .payslip-branding .client-company { color: #444 !important; }
+
+            .payslip-detail-header { border-bottom-color: #ccc !important; }
+             .payslip-detail-header .info-item span { color: #555 !important; font-size: 8pt !important;}
+             .payslip-detail-header .info-item strong { color: #000 !important; font-size: 9.5pt !important; }
+
+            .payslip-section h4 { color: #000 !important; border-bottom: none !important; font-size: 11pt !important; }
+            .payslip-section { margin-bottom: 15px !important; }
+
+             .payslip-items-grid { font-size: 9.5pt !important; gap: 4px 10px; }
+             .payslip-item-label { color: #222 !important; }
+             .payslip-item-value { color: #000 !important; }
+             .payslip-item-detail { color: #555 !important; font-size: 8pt !important; }
+
+             .payslip-subtotal { border-top-color: #ccc !important; font-weight: bold; }
+
+             .payslip-net-summary { border-top-color: #000 !important; margin-top: 20px !important; }
+             .payslip-net-pay {
+                 background-color: #eee !important;
+                 border: 1px solid #bbb !important;
+                 color: #000 !important; /* Use black for net pay amount in print */
+                 font-size: 12pt !important;
+             }
+             .payslip-net-pay span:first-child { /* Label */
+                color: #000 !important;
+            }
+            .payslip-amount-words { display: none; } /* Often not needed/formatted well for print */
+
+            .payslip-print-footer {
+                 display: block !important; /* Show print footer */
+                 border-top-color: #ccc !important;
+             }
+             /* Hide elements not needed for payslip print */
+            .search-container, .topbar-icon, .sidebar-footer, .lighthouse-badge { display: none !important; }
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--navy);
+            color: var(--text-light);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-header .logo::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background-color: var(--gold);
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            padding: 10px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            margin-bottom: 5px;
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--gold);
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-icon {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-250px);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar (Keep consistent) -->
+    <div class="sidebar">
+         <!-- Copy Sidebar structure from payslip-page.html -->
+        <div class="sidebar-header">
+            <a href="#" class="logo">LUMINUS</a>
+            <button class="toggle-btn" id="sidebarToggle"> <!-- Added ID for JS -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="user-profile">
+            <div class="user-avatar">AM</div> <div class="user-info"><span class="user-name">Admin Manager</span><span class="user-role">Administrator</span></div>
+        </div>
+        <div class="nav-menu">
+            <a href="dashboard-page.html" class="nav-item"> <!-- Link to Dashboard -->
+                <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect> </svg> </div> Dashboard
+            </a>
+            <a href="payslip-page.html" class="nav-item active"> <!-- Active Payslip Item -->
+                <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line> </svg> </div> Payslip
+            </a>
+             <a href="#" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> </div> Companies </a>
+             <a href="#" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path> </svg> </div> Employees </a>
+             <a href="#" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg> </div> Reports </a>
+             <a href="#" class="nav-item"> <div class="nav-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> </div> Settings </a>
+        </div>
+        <div class="sidebar-footer">
+             <a href="#"> <div style="display: flex; align-items: center;"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Support </div> </a>
+             <a href="login-page.html"> <div style="display: flex; align-items: center;"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"> <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line> </svg> Logout </div> </a>
+             <div class="lighthouse-badge"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span>Developed by Lighthouse</span> </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar (Keep consistent) -->
+        <div class="topbar">
+            <div style="display: flex; align-items: center;">
+                <button class="toggle-btn" id="sidebarToggleMain" style="margin-right: 15px; color: var(--navy);">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+               </button>
+               <div class="page-title">Payslip Details</div> <!-- Updated Title -->
+           </div>
+           <div class="topbar-actions">
+               <!-- Search might be less relevant here, optional -->
+               <div class="topbar-icon"> <!-- Keep relevant icons -->
+                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                   <div class="notification-badge">3</div>
+               </div>
+           </div>
+        </div>
+
+        <!-- Content Wrapper for Payslip View -->
+        <div class="content-wrapper">
+
+            <!-- 🔹 Footer Actions (Placed at top for easy access) -->
+             <div class="payslip-view-actions">
+                 <a href="payslip-page.html" class="btn-light" style="text-decoration: none;"> <!-- Link back -->
+                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                     Back to Summary
+                 </a>
+                 <div class="action-group">
+                    <button class="btn-secondary" onclick="window.print();"> <!-- Use JS print() for PDF generation via browser -->
+                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                         Download as PDF
+                     </button>
+                     <button class="btn-primary">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                          Send to Employee
+                     </button>
+                 </div>
+             </div>
+
+            <!-- Payslip Detail Card -->
+            <div class="payslip-detail-card">
+                <!-- Optional Branding -->
+                <div class="payslip-branding">
+                    <div class="logo">LUMINUS</div>
+                    <div class="client-company">Pay slip for: <strong>Tech Innovators Inc.</strong></div> <!-- Placeholder Company -->
+                </div>
+
+                 <!-- 🔹 Employee & Payslip Header -->
+                 <div class="payslip-detail-header">
+                     <div class="info-item"><span>Employee Name</span><strong>Julio Maghanoy</strong></div>
+                     <div class="info-item"><span>Employee ID</span><strong>TECH-00123</strong></div>
+                     <div class="info-item"><span>Company Assigned</span><strong>Tech Innovators Inc.</strong></div>
+                     <div class="info-item"><span>Role</span><strong>Project Lead</strong></div>
+                     <div class="info-item"><span>Salary Schedule</span><strong>Semi-monthly</strong></div>
+                     <div class="info-item"><span>Period Covered</span><strong>October 16 - 31, 2023</strong></div>
+                     <div class="info-item"><span>Date Generated</span><strong>November 03, 2023</strong></div>
+                 </div>
+
+                 <!-- 🔹 Earnings Section -->
+                 <div class="payslip-section">
+                    <h4>Earnings</h4>
+                    <div class="payslip-items-grid">
+                        <span class="payslip-item-label">Basic Pay</span>
+                        <span class="payslip-item-value">₱15,000.00</span>
+
+                        <span class="payslip-item-label">Daily Rate × Days Worked</span>
+                        <span class="payslip-item-value">₱15,000.00 <span class="payslip-item-detail">(₱1,250.00 × 12 days)</span></span>
+
+                        <span class="payslip-item-label">Regular OT</span>
+                        <span class="payslip-item-value">₱1,200.00 <span class="payslip-item-detail">(5.5 hrs @ 1.25x)</span></span>
+
+                        <span class="payslip-item-label">Regular Holiday Pay</span>
+                        <span class="payslip-item-value">₱1,250.00 <span class="payslip-item-detail">(1 day)</span></span>
+
+                        <span class="payslip-item-label">Special Holiday Pay</span>
+                        <span class="payslip-item-value">₱1,050.00 <span class="payslip-item-detail">(2 days @ 1.3x)</span></span>
+
+                        <span class="payslip-item-label">Monthly Incentive (Sept)</span>
+                        <span class="payslip-item-value">₱0.00</span>
+
+                        <span class="payslip-item-label">Monthly Incentive (Oct)</span>
+                        <span class="payslip-item-value">₱500.00</span>
+
+                        <span class="payslip-item-label">Other Bonus: Project Completion</span>
+                        <span class="payslip-item-value">₱0.00</span>
+                    </div>
+                    <div class="payslip-subtotal">
+                         <span class="payslip-item-label">Gross Pay</span>
+                         <span class="payslip-item-value">₱19,000.00</span> <!-- Sum of above, placeholder -->
+                    </div>
+                 </div>
+
+                <!-- 🔹 Deductions Section -->
+                <div class="payslip-section">
+                    <h4>Deductions</h4>
+                    <div class="payslip-items-grid">
+                         <span class="payslip-item-label">SSS Contribution</span>
+                         <span class="payslip-item-value">₱675.00</span>
+
+                         <span class="payslip-item-label">PHIC Contribution</span>
+                         <span class="payslip-item-value">₱375.00</span>
+
+                         <span class="payslip-item-label">HDMF Contribution</span>
+                         <span class="payslip-item-value">₱100.00</span>
+
+                         <span class="payslip-item-label">SSS Loan</span>
+                         <span class="payslip-item-value">₱500.50</span>
+
+                         <span class="payslip-item-label">HDMF Loan</span>
+                         <span class="payslip-item-value">₱0.00</span>
+
+                         <span class="payslip-item-label">Undertime</span>
+                         <span class="payslip-item-value">₱0.00 <span class="payslip-item-detail">(0 mins)</span></span>
+
+                         <span class="payslip-item-label">Cash Advance</span>
+                         <span class="payslip-item-value">₱500.00</span>
+
+                         <span class="payslip-item-label">Food Charge</span>
+                         <span class="payslip-item-value">₱0.00</span>
+
+                         <span class="payslip-item-label">Breakages or Damages</span>
+                         <span class="payslip-item-value">₱0.00</span>
+
+                         <span class="payslip-item-label">Uniform</span>
+                         <span class="payslip-item-value">₱0.00</span>
+
+                         <span class="payslip-item-label">Overpayment Adjustment</span>
+                         <span class="payslip-item-value">₱0.00</span>
+                    </div>
+                     <div class="payslip-subtotal">
+                          <span class="payslip-item-label">Total Deductions</span>
+                          <span class="payslip-item-value">- ₱2,150.50</span> <!-- Sum of above, placeholder -->
+                     </div>
+                 </div>
+
+                 <!-- 🔹 Net Pay Summary -->
+                <div class="payslip-net-summary">
+                     <div class="payslip-net-pay">
+                         <span>NET PAY</span>
+                         <span>₱16,849.50</span> <!-- Gross - Deductions, placeholder -->
+                     </div>
+                     <div class="payslip-amount-words">
+                         <!-- Requires JS/Backend to generate -->
+                          Amount in Words: <span>Sixteen Thousand Eight Hundred Forty-Nine Pesos and 50/100 Only</span>
+                     </div>
+                </div>
+
+                <!-- Print Footer -->
+                 <div class="payslip-print-footer">
+                    This is a system-generated payslip. Generated on: Nov 03, 2023 by Luminus Payroll System.
+                 </div>
+
+            </div> <!-- End Payslip Detail Card -->
+
+        </div> <!-- End Content Wrapper -->
+
+    </div> <!-- End Main Content -->
+
+    <script>
+        // Basic Javascript for Sidebar Toggle (Copy from previous)
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleButtons = document.querySelectorAll('#sidebarToggle, #sidebarToggleMain');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        });
+
+        document.addEventListener('click', function(event) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isToggleButton = Array.from(toggleButtons).some(btn => btn.contains(event.target));
+            if (!isClickInsideSidebar && !isToggleButton && sidebar.classList.contains('active') && window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Placeholder for potential future JS interactions on this page
+        // (e.g., if Send to Employee triggers an API call)
+    </script>
+
+</body>
+</html>
