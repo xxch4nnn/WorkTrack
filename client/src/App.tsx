@@ -147,6 +147,10 @@ function Router() {
       <ProtectedRoute path="/reports" component={() => <Redirect to="/admin/reports" />} adminOnly={true} />
       <ProtectedRoute path="/settings" component={() => <Redirect to="/admin/settings" />} adminOnly={true} />
       
+      {/* Public Routes */}
+      <Route path="/terms-and-conditions" component={TermsAndConditions} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      
       <Route component={NotFound} />
     </Switch>
   );

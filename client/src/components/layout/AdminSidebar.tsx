@@ -75,9 +75,12 @@ const AdminSidebar = ({ isOpen }: SidebarProps) => {
         }
       )}
     >
-      <div className="px-4 py-2 mb-4 bg-primary text-white mx-2 rounded-md">
-        <h2 className="text-lg font-semibold">Admin Dashboard</h2>
-        <p className="text-xs opacity-80">Manage your agency</p>
+      <div className="px-4 py-4 mb-4 bg-primary text-white mx-2 rounded-md">
+        <h2 className="text-lg font-bold">WorkTrack</h2>
+        <div className="flex items-center">
+          <p className="text-xs opacity-80">by Lighthouse</p>
+          <div className="ml-auto px-2 py-1 bg-white bg-opacity-20 rounded text-xs font-medium">Admin</div>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         <nav className="px-2 space-y-1">

@@ -42,7 +42,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             className="absolute left-4 top-4 z-10"
           />
           
-          {children}
+          <div className="container mx-auto">
+            {children}
+          </div>
+          
+          <footer className="mt-auto py-4 border-t bg-white">
+            <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
+              <div>
+                © {new Date().getFullYear()} Solaire Manpower Agency | Powered by Lighthouse
+              </div>
+              <div className="flex gap-4 mt-2 sm:mt-0">
+                <a href="/terms-and-conditions" className="hover:text-primary transition-colors">
+                  Terms & Conditions
+                </a>
+                <a href="/privacy-policy" className="hover:text-primary transition-colors">
+                  Privacy Policy
+                </a>
+              </div>
+            </div>
+          </footer>
         </main>
       </div>
     </div>
