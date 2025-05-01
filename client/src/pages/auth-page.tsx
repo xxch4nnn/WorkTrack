@@ -75,9 +75,9 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 overflow-auto">
       {/* Left column with forms */}
-      <div className="w-full lg:w-1/2 p-4 md:p-8 flex items-center justify-center">
+      <div className="w-full lg:w-1/2 p-4 md:p-8 flex items-center justify-center overflow-y-auto py-10">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center text-primary">
@@ -252,8 +252,8 @@ export default function AuthPage() {
       </div>
       
       {/* Right column with hero content */}
-      <div className="hidden lg:block lg:w-1/2 bg-primary p-12 text-white">
-        <div className="h-full flex flex-col justify-center">
+      <div className="hidden lg:block lg:w-1/2 bg-primary p-12 text-white overflow-y-auto">
+        <div className="min-h-full flex flex-col justify-center py-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Streamline Your<br />Manpower Management
           </h1>

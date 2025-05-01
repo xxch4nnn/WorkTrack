@@ -149,6 +149,28 @@ export class MemStorage implements IStorage {
       status: "Active"
     });
     
+    // Create regular staff user
+    this.createUser({
+      username: "staff",
+      password: "staff123",
+      firstName: "Staff",
+      lastName: "Member",
+      email: "staff@worktrack.com",
+      role: "Staff",
+      status: "Active"
+    });
+    
+    // Create manager user
+    this.createUser({
+      username: "manager",
+      password: "manager123",
+      firstName: "Department",
+      lastName: "Manager",
+      email: "manager@worktrack.com",
+      role: "Manager",
+      status: "Active"
+    });
+    
     // Create sample companies
     const companyNames = ["Acme Corporation", "Globex Inc.", "Stark Industries", "Umbrella Corp."];
     companyNames.forEach(name => {

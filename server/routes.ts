@@ -1253,7 +1253,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/all/clear", async (req, res) => {
     try {
       await storage.clearAll();
-      // Add back a single admin user and log the action
+      
+      // Add back admin user
       await storage.createUser({
         username: "admin",
         password: "admin123",
@@ -1261,6 +1262,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: "User",
         email: "admin@worktrack.com",
         role: "Admin",
+        status: "Active"
+      });
+      
+      // Add back staff user
+      await storage.createUser({
+        username: "staff",
+        password: "staff123",
+        firstName: "Staff",
+        lastName: "Member",
+        email: "staff@worktrack.com",
+        role: "Staff",
+        status: "Active"
+      });
+      
+      // Add back manager user
+      await storage.createUser({
+        username: "manager",
+        password: "manager123",
+        firstName: "Department",
+        lastName: "Manager",
+        email: "manager@worktrack.com",
+        role: "Manager",
         status: "Active"
       });
       
