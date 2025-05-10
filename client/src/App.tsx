@@ -12,6 +12,7 @@ import DTRManagement from "@/pages/DTRManagement";
 import Payroll from "@/pages/Payroll";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
+import NotificationContainer from "@/components/ui/notifications/NotificationContainer";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        <NotificationContainer position="top-right" maxNotifications={5} />
         <Router />
       </TooltipProvider>
     </QueryClientProvider>
