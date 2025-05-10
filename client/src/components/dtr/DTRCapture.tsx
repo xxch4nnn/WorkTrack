@@ -1,343 +1,537 @@
-import * as React from "react";
-import { useState, useRef } from "react";
-import Webcam from "react-webcam";
-import { useDropzone } from "react-dropzone";
-import { Camera, Upload, File, X, Check, ImageOff, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { processDTRImage, ParsedDTRData, fetchDTRFormats } from "@/lib/services/ocrService";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import Webcam from 'react-webcam';
+import { Camera, RefreshCw, Upload, CheckCircle2, XCircle, SlidersHorizontal, Image, ZoomIn, Move, Sparkles } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
+import { DtrFormat } from '@shared/schema';
+import { mlService, ImageEnhancementOptions, DTRPrediction } from '@/lib/services/mlService';
+import notificationService from '@/lib/services/notificationService';
 
-interface DTRCaptureProps {
-  onSuccess: (dtrData: any) => void;
-  onError: (error: string) => void;
-  onCancel: () => void;
-}
+// CSS styles for the capture component
+const CAPTURE_STYLES = {
+  container: 'flex flex-col md:flex-row gap-6',
+  captureSection: 'flex-1 flex flex-col gap-4',
+  previewSection: 'flex-1 flex flex-col gap-4',
+  webcamContainer: 'relative rounded-lg overflow-hidden bg-black flex items-center justify-center h-[350px]',
+  webcam: 'h-full w-full object-contain',
+  captureControls: 'flex flex-wrap justify-center gap-2 mt-2',
+  button: 'btn-primary flex items-center gap-2 px-3 py-2 text-sm',
+  secondaryButton: 'btn-outline flex items-center gap-2 px-3 py-2 text-sm',
+  dangerButton: 'flex items-center gap-2 px-3 py-2 text-sm bg-error text-white hover:bg-error-darker rounded-md',
+  previewContainer: 'relative rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center h-[300px]',
+  previewImage: 'max-h-full max-w-full object-contain',
+  previewMessage: 'text-gray-500 text-center',
+  enhancementsPanel: 'mt-4 p-4 bg-white rounded-lg shadow-sm',
+  enhancementToggle: 'flex items-center gap-2 mb-2',
+  enhancementToggleLabel: 'flex-1 text-sm',
+  enhancementToggleSwitch: 'relative inline-flex h-5 w-10 items-center rounded-full bg-gray-200',
+  enhancementToggleSwitchActive: 'bg-primary',
+  enhancementToggleSlider: 'inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out',
+  enhancementToggleSliderActive: 'translate-x-5',
+  formGroup: 'mb-4',
+  formLabel: 'block text-sm font-medium text-gray-700 mb-1',
+  formSelect: 'w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-primary focus:border-primary',
+  formInput: 'w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-primary focus:border-primary',
+  resultPanel: 'mt-4 p-4 bg-white rounded-lg shadow-sm',
+  resultField: 'flex justify-between mb-2',
+  resultFieldLabel: 'text-sm font-medium text-gray-700',
+  resultFieldValue: 'text-sm text-gray-900',
+  resultConfidence: 'text-xs px-2 py-1 rounded-full',
+  resultConfidenceHigh: 'bg-success-lighter text-success-darker',
+  resultConfidenceMedium: 'bg-warning-lighter text-warning-darker',
+  resultConfidenceLow: 'bg-error-lighter text-error-darker',
+};
 
-const DTRCapture: React.FC<DTRCaptureProps> = ({ 
-  onSuccess, 
-  onError,
-  onCancel 
-}) => {
-  const [captureMethod, setCaptureMethod] = useState<string>("camera");
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [result, setResult] = useState<ParsedDTRData | null>(null);
+const DTRCapture: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
-  const { toast } = useToast();
-
-  // File upload handling
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png']
-    },
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      if (acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        const reader = new FileReader();
-        
-        reader.onload = () => {
-          if (typeof reader.result === 'string') {
-            setPreviewImage(reader.result);
-            setCapturedImage(reader.result);
-          }
-        };
-        
-        reader.readAsDataURL(file);
-      }
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [prediction, setPrediction] = useState<DTRPrediction | null>(null);
+  const [matchedFormat, setMatchedFormat] = useState<DtrFormat | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [showEnhancementOptions, setShowEnhancementOptions] = useState(false);
+  const [enhancementOptions, setEnhancementOptions] = useState<ImageEnhancementOptions>({
+    denoise: true,
+    sharpen: true,
+    contrast: true,
+    perspective: false,
+    removeBackground: false,
+  });
+  
+  // Get available DTR formats
+  const { data: dtrFormats = [] } = useQuery<DtrFormat[]>({
+    queryKey: ['/api/dtr-formats'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/dtr-formats');
+      return await res.json();
     }
   });
-
-  // Camera capture handling
-  const captureImage = React.useCallback(() => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      setPreviewImage(imageSrc);
+  
+  // Get employees for selection
+  const { data: employees = [] } = useQuery({
+    queryKey: ['/api/employees'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/employees');
+      return await res.json();
+    }
+  });
+  
+  // Submit DTR mutation
+  const submitDTRMutation = useMutation({
+    mutationFn: async (dtrData: any) => {
+      const res = await apiRequest('POST', '/api/dtrs', dtrData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      notificationService.success('DTR Submitted', 'The DTR has been successfully submitted.');
+      
+      // Reset the state
+      setCapturedImage(null);
+      setEnhancedImage(null);
+      setPrediction(null);
+      setMatchedFormat(null);
+      
+      // Invalidate queries to refresh DTR list
+      queryClient.invalidateQueries({ queryKey: ['/api/dtrs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dtrs/recent'] });
+    },
+    onError: (error: any) => {
+      notificationService.error('DTR Submission Failed', error.message || 'Failed to submit the DTR.');
+    }
+  });
+  
+  // Submit unknown DTR format mutation
+  const submitUnknownFormatMutation = useMutation({
+    mutationFn: async (formatData: any) => {
+      const res = await apiRequest('POST', '/api/dtr-formats/unknown', formatData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      notificationService.success(
+        'Unknown Format Submitted', 
+        'The unknown DTR format has been submitted for review.'
+      );
+      
+      // Reset the state
+      setCapturedImage(null);
+      setEnhancedImage(null);
+      setPrediction(null);
+      setMatchedFormat(null);
+    },
+    onError: (error: any) => {
+      notificationService.error(
+        'Format Submission Failed', 
+        error.message || 'Failed to submit the unknown DTR format.'
+      );
+    }
+  });
+  
+  // Capture photo from webcam
+  const capturePhoto = useCallback(() => {
+    if (!webcamRef.current) return;
+    
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (imageSrc) {
       setCapturedImage(imageSrc);
+      setEnhancedImage(null);
+      setPrediction(null);
+      setMatchedFormat(null);
     }
   }, [webcamRef]);
-
-  // Process the captured/uploaded image
-  const processImage = async () => {
-    if (!capturedImage) {
-      toast({
-        title: "No image",
-        description: "Please capture or upload an image first.",
-        variant: "destructive"
-      });
-      return;
-    }
+  
+  // Process the captured image
+  const processImage = useCallback(async () => {
+    if (!capturedImage) return;
     
     setProcessing(true);
     
     try {
-      // First ensure we have loaded formats from the server
-      await fetchDTRFormats();
+      // First enhance the image
+      const enhancedImg = await mlService.processDTRImage(capturedImage, enhancementOptions);
+      setEnhancedImage(enhancedImg);
       
-      // Process the image with OCR, passing employee ID if available
-      const dtrData = await processDTRImage(capturedImage);
-      setResult(dtrData);
+      // Then analyze the enhanced image
+      const analysis = await mlService.analyzeDTRImage(enhancedImg, dtrFormats);
       
-      // If high confidence and doesn't need review, automatically submit
-      if (dtrData.confidence > 0.7 && !dtrData.needsReview) {
-        submitDTR(dtrData);
+      if (analysis.prediction) {
+        setPrediction(analysis.prediction);
+        setMatchedFormat(analysis.matchedFormat);
+        
+        // If high confidence and matched format, suggest submit
+        if (analysis.confidence > 0.85 && analysis.matchedFormat) {
+          notificationService.success(
+            'DTR Analysis Complete', 
+            `Recognized as ${analysis.matchedFormat.name} format with high confidence.`
+          );
+        } 
+        // If medium confidence, suggest verification
+        else if (analysis.confidence > 0.6) {
+          notificationService.info(
+            'DTR Analysis Complete', 
+            'Please verify the extracted information before submitting.'
+          );
+        } 
+        // If low confidence or no match, suggest unknown format
+        else {
+          notificationService.warning(
+            'DTR Format Not Recognized', 
+            'This appears to be an unknown DTR format. Please submit it for review.'
+          );
+        }
+      } else {
+        notificationService.error(
+          'DTR Analysis Failed', 
+          'Could not extract information from the image.'
+        );
       }
     } catch (error) {
-      toast({
-        title: "Processing Error",
-        description: "Failed to process the DTR image. Please try again or use a clearer image.",
-        variant: "destructive"
-      });
-      onError("Failed to process the DTR image");
+      console.error('Error processing image:', error);
+      notificationService.error(
+        'Processing Failed', 
+        'An error occurred while processing the image.'
+      );
     } finally {
       setProcessing(false);
     }
-  };
-
-  // Submit the processed DTR data
-  const submitDTR = async (dtrData: ParsedDTRData) => {
-    try {
-      // Prepare DTR data for API submission
-      const newDTR = {
-        employeeId: dtrData.employeeId,
-        date: dtrData.date || new Date().toISOString().split('T')[0],
-        timeIn: dtrData.timeIn || "09:00",
-        timeOut: dtrData.timeOut || "17:00",
-        breakHours: dtrData.breakHours || 1,
-        overtimeHours: dtrData.overtimeHours || 0,
-        remarks: dtrData.remarks || "",
-        type: dtrData.type || "Daily",
-        status: "Pending",
-        submissionDate: new Date().toISOString().split('T')[0],
-      };
-      
-      // Calculate regular hours (server will do this too)
-      const inHour = parseInt(newDTR.timeIn.split(':')[0]);
-      const inMinute = parseInt(newDTR.timeIn.split(':')[1]);
-      const outHour = parseInt(newDTR.timeOut.split(':')[0]);
-      const outMinute = parseInt(newDTR.timeOut.split(':')[1]);
-      
-      const totalMinutes = (outHour * 60 + outMinute) - (inHour * 60 + inMinute) - (newDTR.breakHours * 60);
-      const regularHours = Math.max(0, totalMinutes / 60);
-      
-      // If this is a new DTR format, log it for learning
-      if (dtrData.needsReview || dtrData.isNewFormat) {
-        await apiRequest("POST", "/api/unknown-dtr-formats", { 
-          rawText: dtrData.rawText,
-          parsedData: dtrData,
-          companyId: dtrData.companyId
-        });
-      }
-      
-      // Submit the DTR
-      const response = await apiRequest("POST", "/api/dtrs", {
-        ...newDTR,
-        regularHours
-      });
-      
-      toast({
-        title: "DTR Submitted",
-        description: "The DTR has been successfully processed and submitted.",
-      });
-      
-      onSuccess(response);
-    } catch (error) {
-      toast({
-        title: "Submission Error",
-        description: "Failed to submit the DTR. Please try again.",
-        variant: "destructive"
-      });
-      
-      onError("Failed to submit the DTR");
-    }
-  };
-
-  const resetCapture = () => {
-    setPreviewImage(null);
+  }, [capturedImage, enhancementOptions, dtrFormats]);
+  
+  // Reset the capture
+  const resetCapture = useCallback(() => {
     setCapturedImage(null);
-    setResult(null);
+    setEnhancedImage(null);
+    setPrediction(null);
+    setMatchedFormat(null);
+    setSelectedEmployee('');
+  }, []);
+  
+  // Toggle an enhancement option
+  const toggleEnhancement = useCallback((option: keyof ImageEnhancementOptions) => {
+    setEnhancementOptions(prev => ({
+      ...prev,
+      [option]: !prev[option]
+    }));
+  }, []);
+  
+  // Submit the DTR
+  const submitDTR = useCallback(() => {
+    if (!prediction || !selectedEmployee) {
+      notificationService.warning(
+        'Missing Information', 
+        'Please select an employee and ensure all DTR data is available.'
+      );
+      return;
+    }
+    
+    const dtrData = {
+      employeeId: parseInt(selectedEmployee),
+      date: prediction.date,
+      timeIn: prediction.timeIn,
+      timeOut: prediction.timeOut,
+      regularHours: prediction.regularHours,
+      overtimeHours: prediction.overtimeHours || 0,
+      breakHours: prediction.breakHours || 1,
+      remarks: matchedFormat ? `Auto-processed using ${matchedFormat.name} format` : 'Manually verified'
+    };
+    
+    submitDTRMutation.mutate(dtrData);
+  }, [prediction, selectedEmployee, matchedFormat, submitDTRMutation]);
+  
+  // Submit as unknown format
+  const submitAsUnknown = useCallback(() => {
+    if (!capturedImage || !enhancedImage) {
+      notificationService.warning(
+        'Missing Image', 
+        'Please capture a DTR image first.'
+      );
+      return;
+    }
+    
+    const formatData = {
+      rawText: prediction ? JSON.stringify(prediction) : '',
+      imageData: enhancedImage,
+      companyId: null,
+      parsedData: prediction ? JSON.stringify(prediction) : null
+    };
+    
+    submitUnknownFormatMutation.mutate(formatData);
+  }, [capturedImage, enhancedImage, prediction, submitUnknownFormatMutation]);
+  
+  // Get confidence class based on value
+  const getConfidenceClass = (confidence: number) => {
+    if (confidence >= 0.8) return CAPTURE_STYLES.resultConfidenceHigh;
+    if (confidence >= 0.6) return CAPTURE_STYLES.resultConfidenceMedium;
+    return CAPTURE_STYLES.resultConfidenceLow;
   };
-
+  
+  // Get webcam constraints
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode: "environment"
+  };
+  
   return (
-    <Card className="p-6">
-      <div className="mb-6">
-        <h3 className="text-xl font-bold">Capture DTR</h3>
-        <p className="text-sm text-gray-500">
-          Upload a DTR image or use the webcam to capture it. The system will automatically process and extract relevant data.
-        </p>
+    <div className={CAPTURE_STYLES.container}>
+      <div className={CAPTURE_STYLES.captureSection}>
+        <h2 className="text-xl font-bold mb-4">Capture DTR</h2>
+        
+        <div className={CAPTURE_STYLES.webcamContainer}>
+          {capturedImage ? (
+            <img 
+              src={enhancedImage || capturedImage} 
+              alt="Captured DTR" 
+              className={CAPTURE_STYLES.webcam}
+            />
+          ) : (
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              videoConstraints={videoConstraints}
+              className={CAPTURE_STYLES.webcam}
+            />
+          )}
+        </div>
+        
+        <div className={CAPTURE_STYLES.captureControls}>
+          {!capturedImage ? (
+            <button 
+              onClick={capturePhoto}
+              className={CAPTURE_STYLES.button}
+            >
+              <Camera size={16} />
+              Capture Photo
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={resetCapture}
+                className={CAPTURE_STYLES.secondaryButton}
+              >
+                <RefreshCw size={16} />
+                Retake Photo
+              </button>
+              
+              <button
+                onClick={() => setShowEnhancementOptions(!showEnhancementOptions)}
+                className={CAPTURE_STYLES.secondaryButton}
+              >
+                <SlidersHorizontal size={16} />
+                Enhancements
+              </button>
+              
+              {!processing && !prediction ? (
+                <button 
+                  onClick={processImage}
+                  className={CAPTURE_STYLES.button}
+                >
+                  <Sparkles size={16} />
+                  Process Image
+                </button>
+              ) : processing ? (
+                <button className={CAPTURE_STYLES.button} disabled>
+                  <RefreshCw size={16} className="animate-spin" />
+                  Processing...
+                </button>
+              ) : null}
+            </>
+          )}
+        </div>
+        
+        {showEnhancementOptions && capturedImage && (
+          <div className={CAPTURE_STYLES.enhancementsPanel}>
+            <h3 className="text-sm font-bold mb-3">Image Enhancement Options</h3>
+            
+            <div className={CAPTURE_STYLES.enhancementToggle}>
+              <label className={CAPTURE_STYLES.enhancementToggleLabel}>Denoise Image</label>
+              <button 
+                className={`${CAPTURE_STYLES.enhancementToggleSwitch} ${enhancementOptions.denoise ? CAPTURE_STYLES.enhancementToggleSwitchActive : ''}`}
+                onClick={() => toggleEnhancement('denoise')}
+              >
+                <span 
+                  className={`${CAPTURE_STYLES.enhancementToggleSlider} ${enhancementOptions.denoise ? CAPTURE_STYLES.enhancementToggleSliderActive : ''}`}
+                />
+              </button>
+            </div>
+            
+            <div className={CAPTURE_STYLES.enhancementToggle}>
+              <label className={CAPTURE_STYLES.enhancementToggleLabel}>Sharpen Text</label>
+              <button 
+                className={`${CAPTURE_STYLES.enhancementToggleSwitch} ${enhancementOptions.sharpen ? CAPTURE_STYLES.enhancementToggleSwitchActive : ''}`}
+                onClick={() => toggleEnhancement('sharpen')}
+              >
+                <span 
+                  className={`${CAPTURE_STYLES.enhancementToggleSlider} ${enhancementOptions.sharpen ? CAPTURE_STYLES.enhancementToggleSliderActive : ''}`}
+                />
+              </button>
+            </div>
+            
+            <div className={CAPTURE_STYLES.enhancementToggle}>
+              <label className={CAPTURE_STYLES.enhancementToggleLabel}>Improve Contrast</label>
+              <button 
+                className={`${CAPTURE_STYLES.enhancementToggleSwitch} ${enhancementOptions.contrast ? CAPTURE_STYLES.enhancementToggleSwitchActive : ''}`}
+                onClick={() => toggleEnhancement('contrast')}
+              >
+                <span 
+                  className={`${CAPTURE_STYLES.enhancementToggleSlider} ${enhancementOptions.contrast ? CAPTURE_STYLES.enhancementToggleSliderActive : ''}`}
+                />
+              </button>
+            </div>
+            
+            <div className={CAPTURE_STYLES.enhancementToggle}>
+              <label className={CAPTURE_STYLES.enhancementToggleLabel}>Fix Perspective</label>
+              <button 
+                className={`${CAPTURE_STYLES.enhancementToggleSwitch} ${enhancementOptions.perspective ? CAPTURE_STYLES.enhancementToggleSwitchActive : ''}`}
+                onClick={() => toggleEnhancement('perspective')}
+              >
+                <span 
+                  className={`${CAPTURE_STYLES.enhancementToggleSlider} ${enhancementOptions.perspective ? CAPTURE_STYLES.enhancementToggleSliderActive : ''}`}
+                />
+              </button>
+            </div>
+            
+            <div className={CAPTURE_STYLES.enhancementToggle}>
+              <label className={CAPTURE_STYLES.enhancementToggleLabel}>Remove Background</label>
+              <button 
+                className={`${CAPTURE_STYLES.enhancementToggleSwitch} ${enhancementOptions.removeBackground ? CAPTURE_STYLES.enhancementToggleSwitchActive : ''}`}
+                onClick={() => toggleEnhancement('removeBackground')}
+              >
+                <span 
+                  className={`${CAPTURE_STYLES.enhancementToggleSlider} ${enhancementOptions.removeBackground ? CAPTURE_STYLES.enhancementToggleSliderActive : ''}`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
-      <Tabs value={captureMethod} onValueChange={setCaptureMethod}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="camera">
-            <Camera className="mr-2 h-4 w-4" />
-            Use Camera
-          </TabsTrigger>
-          <TabsTrigger value="upload">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Image
-          </TabsTrigger>
-        </TabsList>
+      <div className={CAPTURE_STYLES.previewSection}>
+        <h2 className="text-xl font-bold mb-4">DTR Information</h2>
         
-        <TabsContent value="camera" className="space-y-4">
-          {!previewImage ? (
-            <div className="rounded-md overflow-hidden bg-black">
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                videoConstraints={{
-                  width: 720,
-                  height: 480,
-                  facingMode: "environment"
-                }}
-                className="w-full"
-              />
-              <div className="bg-black p-2 flex justify-center">
-                <Button onClick={captureImage} className="bg-white text-black hover:bg-gray-200">
-                  <Camera className="mr-2 h-4 w-4" />
-                  Capture
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="relative">
-              <img src={previewImage} alt="Captured DTR" className="w-full rounded-md" />
-              <div className="absolute top-2 right-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={resetCapture}
-                  className="rounded-full h-8 w-8 p-0"
+        {prediction ? (
+          <>
+            <div className={CAPTURE_STYLES.resultPanel}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold">Extracted DTR Data</h3>
+                <span 
+                  className={`${CAPTURE_STYLES.resultConfidence} ${getConfidenceClass(prediction.confidence)}`}
                 >
-                  <X className="h-4 w-4" />
-                </Button>
+                  {Math.round(prediction.confidence * 100)}% Confidence
+                </span>
               </div>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="upload" className="space-y-4">
-          {!previewImage ? (
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-md p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors ${
-                isDragActive ? "border-primary bg-blue-50" : "border-gray-300"
-              }`}
-            >
-              <input {...getInputProps()} />
-              <File className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm font-medium">
-                Drag & drop a DTR image here, or click to select
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                Supports JPG, JPEG, PNG files
-              </p>
-            </div>
-          ) : (
-            <div className="relative">
-              <img src={previewImage} alt="Uploaded DTR" className="w-full rounded-md" />
-              <div className="absolute top-2 right-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={resetCapture}
-                  className="rounded-full h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      {previewImage && (
-        <div className="mt-6 space-y-4">
-          <Button onClick={processImage} disabled={processing} className="w-full">
-            {processing ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Process DTR
-              </>
-            )}
-          </Button>
-          
-          {result && (
-            <div className="space-y-4">
-              <Alert className={result.confidence > 0.7 ? "bg-green-50" : "bg-amber-50"}>
-                <AlertDescription className="text-sm">
-                  {result.confidence > 0.7
-                    ? "Successfully processed the DTR with high confidence."
-                    : "The DTR was processed but may need manual verification."}
-                </AlertDescription>
-              </Alert>
               
-              {result.needsReview && (
-                <div className="p-4 border rounded-md bg-yellow-50">
-                  <p className="text-sm font-medium text-amber-800">New DTR Format Detected</p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    This format hasn't been fully recognized. The system will learn from your corrections.
-                  </p>
+              <div className={CAPTURE_STYLES.resultField}>
+                <span className={CAPTURE_STYLES.resultFieldLabel}>Date:</span>
+                <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.date}</span>
+              </div>
+              
+              <div className={CAPTURE_STYLES.resultField}>
+                <span className={CAPTURE_STYLES.resultFieldLabel}>Time In:</span>
+                <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.timeIn}</span>
+              </div>
+              
+              <div className={CAPTURE_STYLES.resultField}>
+                <span className={CAPTURE_STYLES.resultFieldLabel}>Time Out:</span>
+                <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.timeOut}</span>
+              </div>
+              
+              <div className={CAPTURE_STYLES.resultField}>
+                <span className={CAPTURE_STYLES.resultFieldLabel}>Regular Hours:</span>
+                <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.regularHours}</span>
+              </div>
+              
+              {prediction.overtimeHours > 0 && (
+                <div className={CAPTURE_STYLES.resultField}>
+                  <span className={CAPTURE_STYLES.resultFieldLabel}>Overtime Hours:</span>
+                  <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.overtimeHours}</span>
                 </div>
               )}
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Employee:</span>
-                  <span>{result.employeeName || "Not detected"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Date:</span>
-                  <span>{result.date || "Not detected"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Time In:</span>
-                  <span>{result.timeIn || "Not detected"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Time Out:</span>
-                  <span>{result.timeOut || "Not detected"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Format:</span>
-                  <span>{result.type || "Unknown"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Confidence:</span>
-                  <span>{Math.round(result.confidence * 100)}%</span>
-                </div>
+              <div className={CAPTURE_STYLES.resultField}>
+                <span className={CAPTURE_STYLES.resultFieldLabel}>Break Hours:</span>
+                <span className={CAPTURE_STYLES.resultFieldValue}>{prediction.breakHours}</span>
               </div>
               
-              <div className="flex space-x-2">
-                <Button onClick={() => submitDTR(result)} className="flex-1">
-                  Submit DTR
-                </Button>
-                <Button variant="outline" onClick={resetCapture} className="flex-1">
-                  Try Again
-                </Button>
-              </div>
+              {matchedFormat && (
+                <div className={CAPTURE_STYLES.resultField}>
+                  <span className={CAPTURE_STYLES.resultFieldLabel}>Format Detected:</span>
+                  <span className={CAPTURE_STYLES.resultFieldValue}>{matchedFormat.name}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
-      
-      <div className="mt-6 pt-4 border-t flex justify-end">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
+            
+            <div className={CAPTURE_STYLES.formGroup}>
+              <label className={CAPTURE_STYLES.formLabel}>
+                Select Employee
+              </label>
+              <select
+                className={CAPTURE_STYLES.formSelect}
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+              >
+                <option value="">-- Select Employee --</option>
+                {employees.map((employee: any) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={submitDTR}
+                disabled={!selectedEmployee || submitDTRMutation.isPending}
+                className={CAPTURE_STYLES.button}
+              >
+                {submitDTRMutation.isPending ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <CheckCircle2 size={16} />
+                )}
+                Submit DTR
+              </button>
+              
+              {(!matchedFormat || prediction.confidence < 0.6) && (
+                <button
+                  onClick={submitAsUnknown}
+                  disabled={submitUnknownFormatMutation.isPending}
+                  className={CAPTURE_STYLES.secondaryButton}
+                >
+                  {submitUnknownFormatMutation.isPending ? (
+                    <RefreshCw size={16} className="animate-spin" />
+                  ) : (
+                    <Upload size={16} />
+                  )}
+                  Submit as Unknown Format
+                </button>
+              )}
+            </div>
+          </>
+        ) : capturedImage ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <p className="text-center text-gray-700 mb-4">
+              {processing ? 
+                'Processing image and extracting DTR data...' :
+                'Click "Process Image" to extract DTR information'
+              }
+            </p>
+            {processing && (
+              <RefreshCw size={24} className="animate-spin text-primary" />
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full">
+            <Image size={48} className="text-gray-400 mb-4" />
+            <p className="text-center text-gray-500">
+              Capture a photo of a DTR to begin processing
+            </p>
+          </div>
+        )}
       </div>
-    </Card>
+    </div>
   );
 };
 
