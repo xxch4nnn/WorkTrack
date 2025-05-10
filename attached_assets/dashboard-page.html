@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminus - Payroll Dashboard</title> <!-- Updated Title -->
+    <style>
+        :root {
+            /* Main color palette */
+            --navy: #172445;
+            --blue: #0b4d83;
+            --cream: #f5f1dd;
+            --sand: #d9c087;
+            --taupe: #c6bcb6;
+            
+            /* Complementary colors */
+            --light-blue: #3a7ca5;
+            --gold: #e6c555;
+            --soft-cream: #fcf9ee;
+            --dark-taupe: #a99e94;
+            --white: #ffffff;
+            
+            /* Functional colors */
+            --primary-color: var(--blue);
+            --secondary-color: var(--gold);
+            --accent-color: var(--navy);
+            --light-color: var(--cream);
+            --dark-color: var(--navy);
+            --text-dark: #333;
+            --text-light: var(--white);
+            --error: #d64045;
+            --success: #4caf50;
+            --warning: #f0a500;
+            --info: #2196f3;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--cream);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: var(--navy);
+            color: var(--text-light);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-header .logo::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background-color: var(--gold);
+            margin-right: 10px;
+        }
+        
+        .user-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            border: 2px solid var(--gold);
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .nav-menu {
+            padding: 10px 0;
+            flex-grow: 1;
+            overflow-y: auto; /* Added for potential longer menus */
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            margin-bottom: 5px;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--gold);
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-icon {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-footer a {
+            color: var(--text-light);
+            text-decoration: none;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            margin-top: 5px;
+        }
+        
+        .sidebar-footer a:hover {
+            opacity: 1;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            max-width: calc(100% - 250px);
+        }
+        
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--navy);
+        }
+        
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-right: 15px;
+        }
+        
+        .search-input {
+            padding: 8px 15px 8px 35px;
+            border: 1px solid var(--taupe);
+            border-radius: 20px;
+            font-size: 14px;
+            width: 220px;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            width: 280px;
+            border-color: var(--blue);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(11, 77, 131, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dark-taupe);
+        }
+        
+        .topbar-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--soft-cream);
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s;
+            color: var(--navy);
+            position: relative;
+        }
+        
+        .topbar-icon:hover {
+            background-color: var(--cream);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background-color: var(--error);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .content-wrapper {
+            flex: 1;
+            display: grid; /* Use grid for more flexible layout */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive columns */
+            gap: 20px;
+            align-items: start; /* Align items at the top */
+        }
+        
+        /* Keep existing stat card styles, repurpose them */
+        .stat-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            color: var(--dark-taupe);
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--navy);
+        }
+        
+        .stat-detail { /* New class for detailed breakdown */
+            font-size: 13px;
+            color: var(--dark-taupe);
+            margin-top: 5px;
+        }
+        .stat-detail span {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* Icon colors (keep existing) */
+        .icon-blue { background-color: var(--blue); }
+        .icon-gold { background-color: var(--gold); }
+        .icon-success { background-color: var(--success); }
+        .icon-warning { background-color: var(--warning); }
+        .icon-info { background-color: var(--info); }
+        .icon-error { background-color: var(--error); }
+        .icon-taupe { background-color: var(--taupe); }
+        .icon-navy { background-color: var(--navy); }
+
+
+        /* Calendar Card Styles */
+        .calendar-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            grid-column: span 2; /* Make calendar wider */
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        .calendar-placeholder {
+            height: 300px; /* Adjust as needed */
+            background-color: var(--soft-cream);
+            border: 1px dashed var(--taupe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-taupe);
+            font-size: 14px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        /* Employee Directory Styles */
+        .employee-directory-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            grid-column: 1 / -1; /* Span full width */
+            overflow-x: auto; /* Allow horizontal scrolling for table */
+        }
+        .directory-header {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px; /* Spacing between elements */
+        }
+        .directory-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        .directory-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+         .directory-controls select,
+         .directory-controls input[type="search"] {
+            padding: 8px 12px;
+            border: 1px solid var(--taupe);
+            border-radius: 6px;
+            font-size: 13px;
+            background-color: var(--soft-cream);
+         }
+         .directory-controls input[type="search"] {
+             padding-left: 30px; /* Space for icon */
+             position: relative;
+         }
+         /* Add search icon if needed */
+        .directory-controls button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--blue);
+            color: var(--white);
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.3s;
+        }
+        .directory-controls button:hover {
+            background-color: var(--light-blue);
+        }
+        .export-btn {
+            background-color: var(--gold);
+            color: var(--navy);
+        }
+         .export-btn:hover {
+            background-color: var(--sand);
+        }
+        
+        .employees-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px; /* Prevent excessive shrinking */
+        }
+        
+        .employees-table th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 2px solid var(--cream); /* Thicker border */
+            color: var(--dark-taupe);
+            font-weight: 600; /* Bolder */
+            font-size: 13px; /* Slightly smaller */
+            white-space: nowrap; /* Prevent header wrapping */
+            text-transform: uppercase; /* Uppercase headers */
+        }
+        
+        .employees-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--cream);
+            font-size: 14px;
+            vertical-align: middle; /* Align vertically */
+        }
+        
+        .employees-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .employees-table tbody tr {
+            transition: background-color 0.3s;
+        }
+        
+        .employees-table tbody tr:hover {
+            background-color: var(--soft-cream);
+        }
+        
+        .employee-info-cell { /* Wrapper for name+avatar */
+            display: flex;
+            align-items: center;
+        }
+        
+        .employee-avatar-small { /* Smaller avatar for table */
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            color: var(--white);
+            font-size: 12px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .employee-name-table {
+            font-weight: 500;
+        }
+        
+        .badge {
+            padding: 4px 10px; /* Adjusted padding */
+            border-radius: 12px; /* Pill shape */
+            font-size: 11px; /* Smaller text */
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block; /* Ensure proper display */
+            white-space: nowrap;
+        }
+        
+        /* Status Badges */
+        .badge-active { background-color: rgba(76, 175, 80, 0.1); color: var(--success); }
+        .badge-inactive { background-color: rgba(214, 64, 69, 0.1); color: var(--error); } /* Added inactive */
+        .badge-pending { background-color: rgba(240, 165, 0, 0.1); color: var(--warning); }
+        .badge-confirmed { background-color: rgba(76, 175, 80, 0.1); color: var(--success); }
+        .badge-rejected { background-color: rgba(214, 64, 69, 0.1); color: var(--error); }
+
+        /* Schedule Badges */
+        .badge-weekly { background-color: rgba(33, 150, 243, 0.1); color: var(--info); }
+        .badge-semi-monthly { background-color: rgba(156, 39, 176, 0.1); color: #9c27b0; } /* Purple */
+        .badge-monthly { background-color: rgba(0, 150, 136, 0.1); color: #009688; } /* Teal */
+
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: none;
+            background-color: var(--soft-cream);
+            color: var(--blue);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--blue);
+            color: var(--white);
+        }
+
+        /* Alerts Panel Styles */
+        .alerts-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            /* grid-column: span 1; */ /* Default span */
+        }
+         .alerts-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 15px;
+         }
+        .alerts-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        .alerts-list {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+             max-height: 250px; /* Limit height and allow scroll if needed */
+             overflow-y: auto;
+         }
+         .alert-item {
+             display: flex;
+             align-items: start; /* Align icon to top */
+             padding: 12px 0;
+             border-bottom: 1px solid var(--cream);
+         }
+         .alert-item:last-child {
+             border-bottom: none;
+         }
+         .alert-icon {
+             width: 30px;
+             height: 30px;
+             border-radius: 50%;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             margin-right: 15px;
+             flex-shrink: 0;
+         }
+         .alert-icon svg {
+             width: 16px;
+             height: 16px;
+         }
+         .alert-content {
+             flex: 1;
+         }
+         .alert-message {
+             font-size: 14px;
+             margin-bottom: 3px;
+             line-height: 1.4;
+         }
+         .alert-time {
+             font-size: 12px;
+             color: var(--dark-taupe);
+         }
+         /* Alert Types Styling */
+         .alert-deadline { background-color: rgba(214, 64, 69, 0.1); color: var(--error); } /* Error-like */
+         .alert-warning { background-color: rgba(240, 165, 0, 0.1); color: var(--warning); }
+         .alert-info { background-color: rgba(33, 150, 243, 0.1); color: var(--info); }
+
+
+        /* Company Overview Card */
+        .company-overview-card {
+             background-color: var(--white);
+             border-radius: 8px;
+             padding: 20px;
+             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .company-overview-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 15px;
+        }
+        .company-overview-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        .company-list {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+             max-height: 200px; /* Example height */
+             overflow-y: auto;
+         }
+         .company-item {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             padding: 10px 0;
+             border-bottom: 1px solid var(--cream);
+             font-size: 14px;
+         }
+          .company-item:last-child {
+             border-bottom: none;
+         }
+         .company-name {
+             font-weight: 500;
+         }
+         .company-employee-count {
+             color: var(--dark-taupe);
+             font-size: 13px;
+         }
+         .view-company-link {
+             color: var(--blue);
+             font-size: 12px;
+             text-decoration: none;
+             margin-left: 10px;
+         }
+         .view-company-link:hover {
+             text-decoration: underline;
+         }
+
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 20px;
+            display: none; /* Initially hidden */
+        }
+        
+        .lighthouse-badge {
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        
+        .lighthouse-badge svg {
+            margin-right: 5px;
+            width: 14px;
+            height: 14px;
+        }
+        
+        @media (max-width: 1200px) {
+            .calendar-card {
+                grid-column: span 1; /* Stack calendar on smaller large screens */
+            }
+             .employee-directory-card {
+                 /* Already full width, ensure table scroll works well */
+             }
+        }
+
+        @media (max-width: 992px) {
+            /* Adjust grid for tablets */
+             .content-wrapper {
+                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+             }
+            .calendar-card {
+                grid-column: span 1; /* Ensure it stacks */
+            }
+            .employee-directory-card {
+                 grid-column: 1 / -1; /* Keep full width */
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-250px);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 5px 0 15px rgba(0,0,0,0.2); /* Add shadow when active */
+            }
+            
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+            }
+            
+            .toggle-btn {
+                display: block; /* Show toggle button */
+            }
+            
+            .topbar {
+                /* position: sticky; Causes issues with body flex, consider alternative if needed */
+                /* top: 0; */
+                /* z-index: 99; */
+            }
+            
+            .search-input {
+                width: 150px;
+            }
+            
+            .search-input:focus {
+                width: 200px;
+            }
+            .directory-header {
+                flex-direction: column; /* Stack header controls */
+                align-items: stretch; /* Stretch controls full width */
+            }
+             .directory-controls {
+                 justify-content: space-between; /* Space out buttons/filters */
+             }
+        }
+        
+        @media (max-width: 576px) {
+             .content-wrapper {
+                 grid-template-columns: 1fr; /* Single column layout */
+             }
+            .topbar-actions .search-container {
+                display: none; /* Hide search in topbar */
+            }
+             .page-title {
+                 font-size: 20px; /* Smaller title */
+             }
+             .topbar-icon {
+                 margin-left: 5px; /* Reduce spacing */
+             }
+              .employees-table {
+                  font-size: 13px; /* Smaller font for table */
+              }
+              .employees-table th, .employees-table td {
+                  padding: 8px 10px; /* Reduce padding */
+              }
+              .badge {
+                  font-size: 10px; /* Smaller badges */
+                  padding: 3px 8px;
+              }
+        }
+        
+        /* Remove old chart styles if not needed, or keep if using elsewhere */
+        /* .chart-bars, .chart-bar, .chart-labels, .donut-chart etc. */
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar (Keep as is) -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="logo">LUMINUS</a>
+            <button class="toggle-btn" id="sidebarToggle"> <!-- Added ID for JS -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                 </svg>
+            </button>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">AM</div>
+            <div class="user-info">
+                <span class="user-name">Admin Manager</span>
+                <span class="user-role">Administrator</span>
+            </div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </div>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                Payslip
+            </a>
+             <a href="#" class="nav-item">
+                <div class="nav-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                 </div>
+                 Companies
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                Employees
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                </div>
+                Reports
+            </a>
+             <a href="#" class="nav-item">
+                <div class="nav-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </div>
+                Settings
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+             <a href="#">
+                 <div style="display: flex; align-items: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Support
+                 </div>
+            </a>
+            <a href="#">
+                <div style="display: flex; align-items: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </div>
+            </a>
+            
+            <div class="lighthouse-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>Developed by Lighthouse</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent"> <!-- Added ID for JS -->
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div style="display: flex; align-items: center;">
+                 <button class="toggle-btn" id="sidebarToggleMain" style="margin-right: 15px; color: var(--navy);"> <!-- Added Toggle for main content area -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                     </svg>
+                </button>
+                <div class="page-title">Dashboard</div>
+            </div>
+            <div class="topbar-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search...">
+                    <div class="search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                </div>
+                <!-- ADDED: Camera Icon Button -->
+                <div class="topbar-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </div>
+                <!-- Existing Notification Icon -->
+                <div class="topbar-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <div class="notification-badge">3</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NEW: Content Wrapper using Grid -->
+        <div class="content-wrapper">
+
+            <!-- Section 1: Employee Summary -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Total Employees</div>
+                    <div class="stat-icon icon-navy">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value">152</div> <!-- Placeholder -->
+                <div class="stat-detail">Weekly: <span>45</span></div>
+                <div class="stat-detail">Semi-monthly: <span>80</span></div>
+                <div class="stat-detail">Monthly: <span>27</span></div>
+            </div>
+
+            <!-- Section 2: Payslip Status Tracker -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-title">Payslip Status (Current Cycle)</div>
+                     <div class="stat-icon icon-gold">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                </div>
+                <div class="stat-value">135</div> <!-- Placeholder (e.g. Total Processed) -->
+                <div class="stat-detail">Pending: <span style="color: var(--warning);">20</span></div>
+                <div class="stat-detail">Confirmed: <span style="color: var(--success);">115</span></div>
+                <div class="stat-detail">Rejected: <span style="color: var(--error);">0</span></div> <!-- Optional Rejected -->
+            </div>
+
+             <!-- Section 5: Company Overview -->
+            <div class="company-overview-card">
+                <div class="company-overview-header">
+                    <div class="company-overview-title">Partner Companies</div>
+                     <div class="stat-icon icon-blue"> <!-- Reusing stat-icon -->
+                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                </div>
+                <div class="stat-value">12</div> <!-- Placeholder -->
+                 <ul class="company-list">
+                     <li class="company-item">
+                         <div>
+                             <span class="company-name">Tech Innovators Inc.</span>
+                             <span class="company-employee-count">(35 employees)</span>
+                         </div>
+                         <a href="#" class="view-company-link">View</a>
+                     </li>
+                      <li class="company-item">
+                          <div>
+                             <span class="company-name">Global Solutions Ltd.</span>
+                             <span class="company-employee-count">(62 employees)</span>
+                         </div>
+                         <a href="#" class="view-company-link">View</a>
+                     </li>
+                      <li class="company-item">
+                          <div>
+                             <span class="company-name">Creative Designs Co.</span>
+                             <span class="company-employee-count">(18 employees)</span>
+                         </div>
+                         <a href="#" class="view-company-link">View</a>
+                     </li>
+                     <!-- Add more companies as needed -->
+                 </ul>
+            </div>
+
+            <!-- Section 6: Alerts & Notifications Panel -->
+            <div class="alerts-card">
+                <div class="alerts-header">
+                    <div class="alerts-title">Alerts & Notifications</div>
+                     <a href="#" class="table-view-all" style="font-size: 13px;">View All</a>
+                </div>
+                 <ul class="alerts-list">
+                     <li class="alert-item">
+                         <div class="alert-icon alert-deadline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                         </div>
+                         <div class="alert-content">
+                             <div class="alert-message">Payroll for <strong>Tech Innovators (Weekly)</strong> due in 2 days.</div>
+                             <div class="alert-time">Deadline: Oct 28, 2023</div>
+                         </div>
+                     </li>
+                     <li class="alert-item">
+                         <div class="alert-icon alert-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                         </div>
+                         <div class="alert-content">
+                             <div class="alert-message">Contract expiring for <strong>Julio M</strong> (Global Solutions).</div>
+                             <div class="alert-time">Expires: Nov 15, 2023</div>
+                         </div>
+                     </li>
+                      <li class="alert-item">
+                         <div class="alert-icon alert-info">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                         </div>
+                         <div class="alert-content">
+                             <div class="alert-message">New compliance document added for review.</div>
+                             <div class="alert-time">3 hours ago</div>
+                         </div>
+                     </li>
+                 </ul>
+            </div>
+
+            <!-- Section 3: Payroll Calendar -->
+            <div class="calendar-card">
+                <div class="calendar-header">
+                    <div class="calendar-title">Payroll Calendar</div>
+                    <div><!-- Placeholder for calendar navigation (Prev/Next Month) --></div>
+                </div>
+                <div class="calendar-placeholder">
+                    Calendar View Placeholder<br>
+                    (Requires JavaScript implementation)<br>
+                    Shows payroll processing & disbursement dates per company.
+                </div>
+            </div>
+
+            <!-- Section 4: Employee Directory Panel -->
+            <div class="employee-directory-card">
+                <div class="directory-header">
+                    <div class="directory-title">Employee Directory</div>
+                    <div class="directory-controls">
+                         <!-- Search Input -->
+                         <input type="search" placeholder="Search employees..." aria-label="Search employees">
+                         
+                         <!-- Filter Dropdowns -->
+                         <select aria-label="Filter by company">
+                             <option value="">All Companies</option>
+                             <option value="tech">Tech Innovators Inc.</option>
+                             <option value="global">Global Solutions Ltd.</option>
+                             <option value="creative">Creative Designs Co.</option>
+                             <!-- Add more companies -->
+                         </select>
+                         <select aria-label="Filter by schedule">
+                             <option value="">All Schedules</option>
+                             <option value="weekly">Weekly</option>
+                             <option value="semi-monthly">Semi-monthly</option>
+                             <option value="monthly">Monthly</option>
+                         </select>
+                         <select aria-label="Filter by status">
+                             <option value="">All Statuses</option>
+                             <option value="active">Active</option>
+                             <option value="inactive">Inactive</option>
+                         </select>
+
+                         <!-- Action Buttons -->
+                         <button type="button">Apply Filters</button>
+                         <button type="button" class="export-btn">Export List</button>
+                    </div>
+                </div>
+                
+                <table class="employees-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>Salary Schedule</th>
+                            <th>Status</th>
+                            <th>Last Payslip</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example Employee Rows (Add more as placeholders) -->
+                        <tr>
+                            <td>
+                                <div class="employee-info-cell">
+                                    <div class="employee-avatar-small">JD</div>
+                                    <span class="employee-name-table">Maghanoy</span>
+                                </div>
+                            </td>
+                            <td>Tech Innovators Inc.</td>
+                            <td>Project Lead</td>
+                            <td><span class="badge badge-semi-monthly">Semi-monthly</span></td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>Oct 15, 2023</td>
+                            <td><button class="action-btn">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="employee-info-cell">
+                                    <div class="employee-avatar-small" style="background-color: var(--gold); color: var(--navy);">AS</div>
+                                    <span class="employee-name-table">Merencillo</span>
+                                </div>
+                            </td>
+                            <td>Global Solutions Ltd.</td>
+                            <td>Programmer</td>
+                            <td><span class="badge badge-monthly">Monthly</span></td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>Sep 30, 2023</td>
+                            <td><button class="action-btn">View</button></td>
+                        </tr>
+                        <tr>
+                             <td>
+                                <div class="employee-info-cell">
+                                    <div class="employee-avatar-small" style="background-color: var(--success);">BW</div>
+                                    <span class="employee-name-table">Gulmatico</span>
+                                </div>
+                            </td>
+                            <td>Tech Innovators Inc.</td>
+                            <td>Communications Liason</td>
+                            <td><span class="badge badge-weekly">Weekly</span></td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>Oct 20, 2023</td>
+                            <td><button class="action-btn">View</button></td>
+                        </tr>
+                         <tr>
+                             <td>
+                                <div class="employee-info-cell">
+                                    <div class="employee-avatar-small" style="background-color: var(--taupe);">CG</div>
+                                    <span class="employee-name-table">Rosal</span>
+                                </div>
+                            </td>
+                            <td>Creative Designs Co.</td>
+                            <td>Graphic Artist</td>
+                            <td><span class="badge badge-semi-monthly">Semi-monthly</span></td>
+                            <td><span class="badge badge-inactive">Inactive</span></td>
+                            <td>Aug 15, 2023</td>
+                            <td><button class="action-btn">View</button></td>
+                        </tr>
+                        <!-- Add more employee rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Removed old chart/table sections - integrate data into new sections above -->
+
+        </div> <!-- End Content Wrapper -->
+    </div> <!-- End Main Content -->
+
+    <script>
+        // Basic Javascript for Sidebar Toggle (Example)
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleButtons = document.querySelectorAll('#sidebarToggle, #sidebarToggleMain'); // Select both buttons
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                // Optional: Add a class to main content to adjust margin/padding if sidebar is overlaying
+                // mainContent.classList.toggle('sidebar-active'); 
+            });
+        });
+
+        // Add listener to close sidebar if clicking outside of it on mobile
+        document.addEventListener('click', function(event) {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isToggleButton = Array.from(toggleButtons).some(btn => btn.contains(event.target));
+            
+            if (!isClickInsideSidebar && !isToggleButton && sidebar.classList.contains('active') && window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Note: Calendar, filtering, data loading, etc. require more advanced JavaScript.
+    </script>
+
+</body>
+</html>
