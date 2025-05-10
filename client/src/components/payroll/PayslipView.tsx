@@ -1,261 +1,256 @@
-import React from "react";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Payroll } from "@shared/schema";
+import { Download, Printer } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
-interface Payslip {
-  id: number;
-  employeeId: number;
-  periodStart: string;
-  periodEnd: string;
-  dateIssued: string;
-  grossPay: number;
-  netPay: number;
-  status: string;
-  payrollId: number;
-  // These fields might be fetched when viewing a specific payslip
-  employeeName?: string;
-  position?: string;
-  department?: string;
-  companyName?: string;
-  regularHours?: number;
-  overtimeHours?: number;
-  holidayHours?: number;
-  regularRate?: number;
-  deductions?: {
-    tax: number;
-    sss: number;
-    philHealth: number;
-    pagIbig: number;
-    loans?: number;
-    other?: number;
-  };
-  allowances?: {
-    transportation?: number;
-    meal?: number;
-    housing?: number;
-    other?: number;
-  };
-}
+type PayslipViewProps = {
+  payroll: Payroll;
+  employeeName: string;
+};
 
-interface PayslipViewProps {
-  payslip: Payslip;
-}
+const PayslipView = ({ payroll, employeeName }: PayslipViewProps) => {
+  const payslipRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-export default function PayslipView({ payslip }: PayslipViewProps) {
-  // Mock data for demonstration - in a real implementation, these would come from the backend
-  const employeeDetails = {
-    name: payslip.employeeName || "John Doe",
-    position: payslip.position || "Software Developer",
-    department: payslip.department || "IT Department",
-    employeeId: `EMP-${payslip.employeeId.toString().padStart(4, '0')}`,
-  };
+  // Fetch employee details
+  const { data: employee, isLoading: isEmployeeLoading } = useQuery({
+    queryKey: ['/api/employees', payroll.employeeId],
+  });
 
-  const companyDetails = {
-    name: payslip.companyName || "Solaire Manpower Agency",
-    address: "12 Main Street, Makati City, Philippines",
-    contact: "+63 (2) 1234-5678",
-  };
+  // Fetch company details
+  const { data: company, isLoading: isCompanyLoading } = useQuery({
+    queryKey: ['/api/companies', employee?.companyId],
+    enabled: !!employee?.companyId,
+  });
 
-  const payDetails = {
-    regularHours: payslip.regularHours || 160,
-    overtimeHours: payslip.overtimeHours || 0,
-    holidayHours: payslip.holidayHours || 0,
-    regularRate: payslip.regularRate || (payslip.grossPay / 160),
-    deductions: payslip.deductions || {
-      tax: payslip.grossPay * 0.1,
-      sss: 1200,
-      philHealth: 400,
-      pagIbig: 100,
-      loans: 0,
-      other: 0,
-    },
-    allowances: payslip.allowances || {
-      transportation: 0,
-      meal: 0,
-      housing: 0,
-      other: 0,
-    },
+  const handlePrint = () => {
+    if (payslipRef.current) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Payslip</title>');
+        printWindow.document.write('<style>');
+        printWindow.document.write(`
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .payslip { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; }
+          .payslip-header { text-align: center; margin-bottom: 20px; }
+          .company-name { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+          .payslip-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+          .section { margin-bottom: 20px; }
+          .section-title { font-weight: bold; margin-bottom: 10px; }
+          .row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+          .total-row { font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; }
+          .separator { border-top: 1px solid #ddd; margin: 15px 0; }
+          @media print {
+            body { padding: 0; }
+            .payslip { border: none; }
+          }
+        `);
+        printWindow.document.write('</style></head><body>');
+        printWindow.document.write(payslipRef.current.innerHTML);
+        printWindow.document.write('</body></html>');
+        
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Add slight delay to ensure content is loaded
+        setTimeout(() => {
+          printWindow.print();
+          // printWindow.close();
+        }, 250);
+      } else {
+        toast({
+          title: "Print Error",
+          description: "Unable to open print window. Please check your browser settings.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  // Calculate total deductions and allowances
-  const totalDeductions = Object.values(payDetails.deductions).reduce((a, b) => a + (b || 0), 0);
-  const totalAllowances = Object.values(payDetails.allowances).reduce((a, b) => a + (b || 0), 0);
+  const generatePDF = () => {
+    try {
+      toast({
+        title: "Download Started",
+        description: "Your payslip PDF is being prepared for download.",
+      });
+      
+      // In a real app, this would call the server to generate the PDF
+      // For now, we'll simulate a download by using the print functionality
+      handlePrint();
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  // Calculate earnings breakdown
-  const regularPay = payDetails.regularHours * payDetails.regularRate;
-  const overtimePay = (payDetails.overtimeHours || 0) * (payDetails.regularRate * 1.25);
-  const holidayPay = (payDetails.holidayHours || 0) * (payDetails.regularRate * 1.5);
-
-  return (
-    <Card className="p-8 bg-white shadow-md">
-      {/* Payslip Header with branding */}
-      <div className="flex justify-between items-center border-b-2 border-primary pb-4 mb-6">
-        <div className="flex items-center">
-          <span className="w-2 h-10 bg-[#e6c555] mr-2"></span>
-          <div>
-            <h1 className="text-2xl font-bold text-[#172445]">WORKTRACK</h1>
-            <p className="text-sm text-gray-500">by Lighthouse</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <h2 className="text-xl font-semibold text-[#0b4d83]">PAYSLIP</h2>
-          <p className="text-sm">{companyDetails.name}</p>
-        </div>
-      </div>
-
-      {/* Payslip Information Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h3 className="text-sm uppercase text-gray-500 mb-1">Employee Information</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Name:</span>
-              <span className="font-medium">{employeeDetails.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">ID:</span>
-              <span>{employeeDetails.employeeId}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Position:</span>
-              <span>{employeeDetails.position}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Department:</span>
-              <span>{employeeDetails.department}</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h3 className="text-sm uppercase text-gray-500 mb-1">Payroll Information</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Pay Period:</span>
-              <span>{formatDate(payslip.periodStart)} - {formatDate(payslip.periodEnd)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Issue Date:</span>
-              <span>{formatDate(payslip.dateIssued)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Payslip #:</span>
-              <span>PS-{payslip.id.toString().padStart(6, '0')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Status:</span>
-              <span className={`font-medium ${
-                payslip.status === "Paid" ? "text-green-600" : 
-                payslip.status === "Pending" ? "text-amber-600" : "text-blue-600"
-              }`}>
-                {payslip.status}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Earnings Section */}
-      <div className="mb-6">
-        <h3 className="text-[#0b4d83] font-semibold border-b pb-2 mb-3">Earnings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Regular Hours ({payDetails.regularHours}hrs)</span>
-                <span>{formatCurrency(regularPay)}</span>
-              </div>
-              {payDetails.overtimeHours > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm">Overtime ({payDetails.overtimeHours}hrs)</span>
-                  <span>{formatCurrency(overtimePay)}</span>
-                </div>
-              )}
-              {payDetails.holidayHours > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm">Holiday Pay ({payDetails.holidayHours}hrs)</span>
-                  <span>{formatCurrency(holidayPay)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <div className="space-y-2">
-              {Object.entries(payDetails.allowances).map(([key, value]) => (
-                value > 0 && (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-sm">{key.charAt(0).toUpperCase() + key.slice(1)} Allowance</span>
-                    <span>{formatCurrency(value)}</span>
-                  </div>
-                )
+  if (isEmployeeLoading || isCompanyLoading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>Loading Payslip...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="space-y-3">
+              {Array(10).fill(0).map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
               ))}
             </div>
           </div>
-        </div>
-        <div className="flex justify-between mt-4 pt-2 border-t">
-          <span className="font-medium">Total Earnings</span>
-          <span className="font-medium">{formatCurrency(payslip.grossPay)}</span>
-        </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" />
+          Print
+        </Button>
+        <Button onClick={generatePDF}>
+          <Download className="mr-2 h-4 w-4" />
+          Download PDF
+        </Button>
       </div>
 
-      {/* Deductions Section */}
-      <div className="mb-6">
-        <h3 className="text-[#0b4d83] font-semibold border-b pb-2 mb-3">Deductions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Income Tax</span>
-                <span>{formatCurrency(payDetails.deductions.tax)}</span>
+      <Card className="w-full max-w-4xl mx-auto">
+        <div ref={payslipRef} className="payslip">
+          <CardHeader className="text-center payslip-header">
+            <CardTitle className="company-name">{company?.name || "WorkTrack Inc."}</CardTitle>
+            <p className="text-gray-500">{company?.address || "123 Business Street, City"}</p>
+            <div className="mt-4 payslip-title">Employee Payslip</div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2 section">
+                <h3 className="font-medium section-title">Employee Information</h3>
+                <div className="row">
+                  <span className="text-gray-500">Name:</span>
+                  <span>{employeeName}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Position:</span>
+                  <span>{employee?.position || "N/A"}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Department:</span>
+                  <span>{employee?.department || "N/A"}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Employee ID:</span>
+                  <span>{employee?.id || "N/A"}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">SSS Contribution</span>
-                <span>{formatCurrency(payDetails.deductions.sss)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">PhilHealth</span>
-                <span>{formatCurrency(payDetails.deductions.philHealth)}</span>
+
+              <div className="space-y-2 section">
+                <h3 className="font-medium section-title">Payroll Information</h3>
+                <div className="row">
+                  <span className="text-gray-500">Pay Period:</span>
+                  <span>{payroll.payPeriodStart} to {payroll.payPeriodEnd}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Pay Date:</span>
+                  <span>{payroll.processedDate || "Pending"}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Payroll #:</span>
+                  <span>PR-{payroll.id.toString().padStart(6, '0')}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Status:</span>
+                  <span>{payroll.status}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm">Pag-IBIG Fund</span>
-                <span>{formatCurrency(payDetails.deductions.pagIbig)}</span>
+
+            <Separator className="my-6 separator" />
+
+            <div className="space-y-6">
+              <div className="space-y-3 section">
+                <h3 className="font-medium section-title">Earnings</h3>
+                <div className="row">
+                  <span className="text-gray-500">Regular Hours:</span>
+                  <span>{payroll.totalRegularHours} hrs</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Hourly Rate:</span>
+                  <span>₱{employee?.hourlyRate?.toFixed(2) || "0.00"}</span>
+                </div>
+                <div className="row">
+                  <span className="text-gray-500">Regular Pay:</span>
+                  <span>₱{(payroll.totalRegularHours * (employee?.hourlyRate || 0)).toFixed(2)}</span>
+                </div>
+                {payroll.totalOvertimeHours > 0 && (
+                  <>
+                    <div className="row">
+                      <span className="text-gray-500">Overtime Hours:</span>
+                      <span>{payroll.totalOvertimeHours} hrs</span>
+                    </div>
+                    <div className="row">
+                      <span className="text-gray-500">Overtime Rate:</span>
+                      <span>₱{((employee?.hourlyRate || 0) * 1.25).toFixed(2)}</span>
+                    </div>
+                    <div className="row">
+                      <span className="text-gray-500">Overtime Pay:</span>
+                      <span>₱{(payroll.totalOvertimeHours * (employee?.hourlyRate || 0) * 1.25).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="row total-row">
+                  <span>Gross Pay:</span>
+                  <span>₱{payroll.grossPay.toFixed(2)}</span>
+                </div>
               </div>
-              {(payDetails.deductions.loans || 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm">Loan Payments</span>
-                  <span>{formatCurrency(payDetails.deductions.loans || 0)}</span>
+
+              <div className="space-y-3 section">
+                <h3 className="font-medium section-title">Deductions</h3>
+                <div className="row">
+                  <span className="text-gray-500">Tax:</span>
+                  <span>₱{(payroll.totalDeductions * 0.6).toFixed(2)}</span>
                 </div>
-              )}
-              {(payDetails.deductions.other || 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm">Other Deductions</span>
-                  <span>{formatCurrency(payDetails.deductions.other || 0)}</span>
+                <div className="row">
+                  <span className="text-gray-500">SSS Contribution:</span>
+                  <span>₱{(payroll.totalDeductions * 0.25).toFixed(2)}</span>
                 </div>
-              )}
+                <div className="row">
+                  <span className="text-gray-500">PhilHealth:</span>
+                  <span>₱{(payroll.totalDeductions * 0.15).toFixed(2)}</span>
+                </div>
+                <div className="row total-row">
+                  <span>Total Deductions:</span>
+                  <span>₱{payroll.totalDeductions.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <Separator className="separator" />
+
+              <div className="row total-row">
+                <span className="text-lg font-bold">Net Pay:</span>
+                <span className="text-lg font-bold">₱{payroll.netPay.toFixed(2)}</span>
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="flex justify-between mt-4 pt-2 border-t">
-          <span className="font-medium">Total Deductions</span>
-          <span className="font-medium">{formatCurrency(totalDeductions)}</span>
-        </div>
-      </div>
 
-      {/* Net Pay Section */}
-      <div className="bg-[#f5f1dd] p-4 rounded-md flex justify-between items-center mb-6">
-        <span className="text-lg font-bold text-[#172445]">NET PAY</span>
-        <span className="text-lg font-bold text-[#172445]">{formatCurrency(payslip.netPay)}</span>
-      </div>
-
-      {/* Footer */}
-      <div className="text-xs text-center text-gray-500 border-t pt-4">
-        <p>This is a computer-generated document. No signature is required.</p>
-        <p className="mt-1">© {new Date().getFullYear()} {companyDetails.name} | Powered by Lighthouse</p>
-      </div>
-    </Card>
+            <div className="mt-10 pt-10 border-t text-center text-sm text-gray-500">
+              <p>This is a computer-generated document. No signature is required.</p>
+              <p>For questions about this payslip, please contact the HR department.</p>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+    </div>
   );
-}
+};
+
+export default PayslipView;

@@ -64,53 +64,10 @@ const DTRFormatManagement = () => {
     }
   });
 
-  const handleGoBack = () => {
-    if (typeof window !== 'undefined') {
-      // First check if there's a URL parameter
-      const urlParams = new URLSearchParams(window.location.search);
-      const returnTo = urlParams.get('returnTo');
-      
-      if (returnTo) {
-        window.location.href = returnTo;
-        return;
-      }
-      
-      // Otherwise, try to go back in history
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        // Default fallback is dashboard
-        window.location.href = '/';
-      }
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleGoBack}
-            className="h-8 w-8 p-0"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            <span className="sr-only">Back</span>
-          </Button>
-          <h3 className="text-xl font-bold">DTR Format Management</h3>
-        </div>
+        <h3 className="text-xl font-bold">DTR Format Management</h3>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Create Format

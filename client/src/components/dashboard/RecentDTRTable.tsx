@@ -16,31 +16,31 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case "Pending":
       return (
-        <span className="px-2 py-1 text-fit-xs rounded-full bg-amber-100 text-amber-800">
+        <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
           Pending
         </span>
       );
     case "Approved":
       return (
-        <span className="px-2 py-1 text-fit-xs rounded-full bg-green-100 text-green-800">
+        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
           Approved
         </span>
       );
     case "Rejected":
       return (
-        <span className="px-2 py-1 text-fit-xs rounded-full bg-red-100 text-red-800">
+        <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
           Rejected
         </span>
       );
     case "Processing":
       return (
-        <span className="px-2 py-1 text-fit-xs rounded-full bg-blue-100 text-blue-800">
+        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
           Processing
         </span>
       );
     default:
       return (
-        <span className="px-2 py-1 text-fit-xs rounded-full bg-gray-100 text-gray-800">
+        <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
           {status}
         </span>
       );
@@ -128,8 +128,8 @@ const RecentDTRTable = ({ isLoading, dtrs = [] }: RecentDTRTableProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between py-5">
-        <CardTitle className="text-fit font-medium">Recent DTR Submissions</CardTitle>
-        <Button variant="ghost" size="sm" className="text-fit-sm">
+        <CardTitle className="text-lg font-medium">Recent DTR Submissions</CardTitle>
+        <Button variant="ghost" size="sm">
           View All
         </Button>
       </CardHeader>
@@ -137,19 +137,19 @@ const RecentDTRTable = ({ isLoading, dtrs = [] }: RecentDTRTableProps) => {
         <table className="w-full min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Employee
               </th>
-              <th className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Period
               </th>
-              <th className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-fit-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -198,18 +198,18 @@ const RecentDTRTable = ({ isLoading, dtrs = [] }: RecentDTRTableProps) => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="ml-4">
-                        <div className="text-fit-sm font-medium text-gray-900 truncate-dynamic">
+                        <div className="text-sm font-medium text-gray-900">
                           Employee #{dtr.employeeId}
                         </div>
-                        <div className="text-fit-xs text-gray-500 truncate-dynamic">Department</div>
+                        <div className="text-sm text-gray-500">Department</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-fit-sm text-gray-900 truncate-dynamic">{dtr.type}</div>
+                    <div className="text-sm text-gray-900">{dtr.type}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-fit-sm text-gray-900 truncate-dynamic">{dtr.date}</div>
+                    <div className="text-sm text-gray-900">{dtr.date}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(dtr.status)}
@@ -266,7 +266,7 @@ const RecentDTRTable = ({ isLoading, dtrs = [] }: RecentDTRTableProps) => {
             ) : (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  <span className="text-fit-sm">No recent DTR submissions found.</span>
+                  No recent DTR submissions found.
                 </td>
               </tr>
             )}
@@ -274,7 +274,7 @@ const RecentDTRTable = ({ isLoading, dtrs = [] }: RecentDTRTableProps) => {
         </table>
       </div>
       <CardContent className="px-4 py-3 bg-gray-50 text-right">
-        <Button variant="outline" size="sm" className="text-fit-sm">
+        <Button variant="outline" size="sm">
           Load More
         </Button>
       </CardContent>

@@ -79,13 +79,6 @@
     @apply border-border;
   }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-  }
-
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
@@ -133,32 +126,4 @@
   .sidebar.open {
     width: 250px;
   }
-}
-
-/* Responsive text utilities */
-.text-fit {
-  font-size: clamp(0.75rem, 2vw, 1rem);
-}
-
-.text-fit-sm {
-  font-size: clamp(0.7rem, 1.5vw, 0.875rem);
-}
-
-.text-fit-xs {
-  font-size: clamp(0.65rem, 1vw, 0.75rem);
-}
-
-/* Better truncation with ellipsis */
-.truncate-dynamic {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
-}
-
-/* Responsive container that shrinks text if needed */
-.responsive-container {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
 }

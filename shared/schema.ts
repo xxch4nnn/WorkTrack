@@ -141,12 +141,10 @@ export const activities = pgTable("activities", {
   action: text("action").notNull(),
   description: text("description").notNull(),
   timestamp: text("timestamp").notNull(),
-  isRead: boolean("is_read").default(false),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
-  isRead: true,
 });
 
 // Define the types

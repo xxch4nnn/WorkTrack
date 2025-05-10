@@ -71,7 +71,6 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
@@ -81,7 +80,6 @@ export interface IStorage {
   getActivity(id: number): Promise<Activity | undefined>;
   getAllActivities(): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
-  markAllActivitiesAsRead(): Promise<void>;
 
   // Data reset operations
   clearEmployees(): Promise<void>;
@@ -146,28 +144,6 @@ export class MemStorage implements IStorage {
       lastName: "User",
       email: "admin@worktrack.com",
       role: "Admin",
-      status: "Active"
-    });
-    
-    // Create regular staff user
-    this.createUser({
-      username: "staff",
-      password: "staff123",
-      firstName: "Staff",
-      lastName: "Member",
-      email: "staff@worktrack.com",
-      role: "Staff",
-      status: "Active"
-    });
-    
-    // Create manager user
-    this.createUser({
-      username: "manager",
-      password: "manager123",
-      firstName: "Department",
-      lastName: "Manager",
-      email: "manager@worktrack.com",
-      role: "Manager",
       status: "Active"
     });
     
@@ -475,12 +451,6 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email
-    );
-  }
-
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
   }
@@ -516,15 +486,9 @@ export class MemStorage implements IStorage {
 
   async createActivity(activity: InsertActivity): Promise<Activity> {
     const id = this.currentActivityId++;
-    const newActivity: Activity = { ...activity, id, isRead: false };
+    const newActivity: Activity = { ...activity, id };
     this.activities.set(id, newActivity);
     return newActivity;
-  }
-  
-  async markAllActivitiesAsRead(): Promise<void> {
-    for (const [id, activity] of this.activities.entries()) {
-      this.activities.set(id, { ...activity, isRead: true });
-    }
   }
 
   // Data reset operations
