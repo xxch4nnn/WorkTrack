@@ -66,10 +66,11 @@ class AuthService {
       );
       
       return newUser;
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       notificationService.error(
         'Registration Failed', 
-        error.message || 'Unable to register. Please try again.'
+        apiError.message || 'Unable to register. Please try again.'
       );
       return null;
     }
@@ -99,10 +100,11 @@ class AuthService {
       window.location.href = '/';
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       notificationService.error(
         'Logout Failed', 
-        error.message || 'Unable to logout. Please try again.'
+        apiError.message || 'Unable to logout. Please try again.'
       );
       return false;
     }
@@ -154,10 +156,11 @@ class AuthService {
       );
       
       return updatedUser;
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       notificationService.error(
         'Update Failed', 
-        error.message || 'Unable to update profile. Please try again.'
+        apiError.message || 'Unable to update profile. Please try again.'
       );
       return null;
     }
@@ -184,10 +187,11 @@ class AuthService {
       );
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       notificationService.error(
         'Password Change Failed', 
-        error.message || 'Unable to change password. Please try again.'
+        apiError.message || 'Unable to change password. Please try again.'
       );
       return false;
     }
