@@ -141,6 +141,41 @@
   @apply absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs;
 }
 
+/* ===== NOTIFICATION STYLES ===== */
+.notification-item {
+  @apply flex items-start p-3 border-b border-gray-100 hover:bg-gray-50;
+}
+
+.notification-item .icon {
+  @apply w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0;
+}
+
+.notification-item .content {
+  @apply flex-1;
+}
+
+.notification-item .message {
+  @apply text-sm font-medium text-gray-800;
+}
+
+.notification-item .time {
+  @apply text-xs text-gray-500 mt-1;
+}
+
+/* ===== USER MENU STYLES ===== */
+.user-menu-item {
+  @apply flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100;
+}
+
+/* ===== SUBMENU STYLES ===== */
+.submenu-container {
+  @apply relative;
+}
+
+.submenu {
+  @apply flex flex-col space-y-1 py-1;
+}
+
 /* ===== CONTENT AREA STYLES ===== */
 .content-section {
   @apply rounded-lg bg-white p-6 shadow-sm;
