@@ -331,16 +331,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     'Logging Out', 
                     'You will be logged out shortly...'
                   );
-                  // Simulate logout process with delay
-                  setTimeout(() => {
-                    // In a real app, we would call authService.logout()
-                    notificationService.info(
-                      'Logged Out', 
-                      'You have been successfully logged out.'
-                    );
-                    // Redirect to home page
-                    window.location.href = '/';
-                  }, 1000);
+                  // Actual logout process
+                  authService.logout();
                 }}
                 className="flex items-center mt-3 hover:text-white/80 cursor-pointer w-full"
               >

@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import Notification from './Notification';
 import { createPortal } from 'react-dom';
 
+type NotificationAction = {
+  label: string;
+  onClick: () => void;
+  style?: 'primary' | 'secondary' | 'danger';
+};
+
 export interface NotificationData {
   id: string;
   type: 'success' | 'error' | 'info' | 'warning';
   title: string;
   message: string;
   duration?: number;
+  actions?: NotificationAction[];
 }
 
 interface NotificationContainerProps {
@@ -81,6 +88,7 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
           title={notification.title}
           message={notification.message}
           duration={notification.duration}
+          actions={notification.actions}
           onClose={removeNotification}
         />
       ))}
