@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './styles/theme.css';
+
 :root {
+  /* Base colors */
   --background: 0 0% 100%;
   --foreground: 20 14.3% 4.1%;
   --muted: 60 4.8% 95.9%;
@@ -13,29 +16,70 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 207 90% 54%;
+  
+  /* Luminus theme colors */
+  --primary: 218 76% 48%;
+  --primary-lighter: 213 93% 61%;
+  --primary-darker: 220 83% 37%;
   --primary-foreground: 211 100% 99%;
-  --secondary: 60 4.8% 95.9%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 60 4.8% 95.9%;
+  
+  --secondary: 271 85% 73%;
+  --secondary-lighter: 270 95% 75%;
+  --secondary-darker: 272 62% 42%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --success: 153 71% 33%;
+  --success-lighter: 156 70% 49%;
+  --success-darker: 155 60% 22%;
+  --success-foreground: 0 0% 100%;
+  
+  --warning: 36 100% 50%;
+  --warning-lighter: 45 100% 51%;
+  --warning-darker: 21 100% 45%;
+  --warning-foreground: 0 0% 0%;
+  
+  --error: 0 74% 51%;
+  --error-lighter: 0 72% 63%;
+  --error-darker: 0 74% 36%;
+  --error-foreground: 0 0% 100%;
+  
+  --info: 213 93% 61%;
+  --info-lighter: 210 95% 72%;
+  --info-darker: 220 83% 37%;
+  --info-foreground: 0 0% 100%;
+  
+  --accent: 213 93% 61%;
   --accent-foreground: 24 9.8% 10%;
-  --destructive: 0 84.2% 60.2%;
+  
+  --destructive: 0 74% 51%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 20 14.3% 4.1%;
+  
+  --ring: 218 76% 48%;
   --radius: 0.5rem;
-  --chart-1: 207 90% 54%;
-  --chart-2: 141 76% 36%;
-  --chart-3: 33 100% 50%;
-  --chart-4: 0 84% 60%;
-  --chart-5: 240 75% 60%;
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 20 14.3% 4.1%;
+  
+  /* Chart colors */
+  --chart-1: 213 93% 61%;
+  --chart-2: 156 70% 49%;
+  --chart-3: 45 100% 51%;
+  --chart-4: 0 72% 63%;
+  --chart-5: 271 85% 73%;
+  
+  /* Sidebar specific */
+  --sidebar-background: 218 76% 48%;
+  --sidebar-foreground: 0 0% 100%;
   --sidebar-primary: 207 90% 54%;
   --sidebar-primary-foreground: 211 100% 99%;
-  --sidebar-accent: 210 40% 96.1%;
-  --sidebar-accent-foreground: 24 9.8% 10%;
-  --sidebar-border: 20 5.9% 90%;
-  --sidebar-ring: 20 14.3% 4.1%;
+  --sidebar-accent: 220 83% 37%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 213 93% 61%;
+  --sidebar-ring: 218 76% 48%;
+  
+  /* Brand colors directly accessible */
+  --color-cream: 60 14% 97%;
+  --color-light-blue: 183 73% 54%;
+  --color-blue: 224 100% 68%;
+  --color-purple: 288 76% 65%;
+  --color-yellow: 61 84% 53%;
 }
 
 .dark {
@@ -49,26 +93,59 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --primary: 207 90% 54%;
+  
+  /* Luminus dark theme colors */
+  --primary: 213 93% 61%;
+  --primary-lighter: 218 76% 48%;
+  --primary-darker: 220 83% 37%;
   --primary-foreground: 211 100% 99%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --accent: 240 3.7% 15.9%;
+  
+  --secondary: 271 85% 73%;
+  --secondary-lighter: 270 95% 75%;
+  --secondary-darker: 272 62% 42%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --success: 156 70% 49%;
+  --success-lighter: 153 71% 58%;
+  --success-darker: 155 60% 40%;
+  --success-foreground: 0 0% 100%;
+  
+  --warning: 45 100% 51%;
+  --warning-lighter: 36 100% 60%;
+  --warning-darker: 21 100% 45%;
+  --warning-foreground: 0 0% 0%;
+  
+  --error: 0 72% 63%;
+  --error-lighter: 0 74% 70%;
+  --error-darker: 0 74% 51%;
+  --error-foreground: 0 0% 100%;
+  
+  --info: 213 93% 61%;
+  --info-lighter: 210 95% 72%;
+  --info-darker: 220 83% 37%;
+  --info-foreground: 0 0% 100%;
+  
+  --accent: 213 93% 61%;
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  
+  --destructive: 0 72% 63%;
   --destructive-foreground: 0 0% 98%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
-  --chart-1: 207 90% 54%;
-  --chart-2: 141 76% 36%;
-  --chart-3: 33 100% 50%;
-  --chart-4: 0 84% 60%;
-  --chart-5: 240 75% 60%;
-  --sidebar-background: 240 10% 3.9%;
+  
+  --ring: 213 93% 61%;
+  
+  /* Chart colors */
+  --chart-1: 213 93% 61%;
+  --chart-2: 156 70% 49%;
+  --chart-3: 45 100% 51%;
+  --chart-4: 0 72% 63%;
+  --chart-5: 271 85% 73%;
+  
+  /* Sidebar specific */
+  --sidebar-background: 220 83% 37%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 207 90% 54%;
+  --sidebar-primary: 213 93% 61%;
   --sidebar-primary-foreground: 211 100% 99%;
-  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent: 218 76% 48%;
   --sidebar-accent-foreground: 0 0% 98%;
   --sidebar-border: 240 3.7% 15.9%;
   --sidebar-ring: 240 4.9% 83.9%;

@@ -24,10 +24,38 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          lighter: "hsl(var(--primary-lighter))",
+          darker: "hsl(var(--primary-darker))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          lighter: "hsl(var(--secondary-lighter))",
+          darker: "hsl(var(--secondary-darker))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          lighter: "hsl(var(--success-lighter))",
+          darker: "hsl(var(--success-darker))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+          lighter: "hsl(var(--warning-lighter))",
+          darker: "hsl(var(--warning-darker))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--error))",
+          foreground: "hsl(var(--error-foreground))",
+          lighter: "hsl(var(--error-lighter))",
+          darker: "hsl(var(--error-darker))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+          lighter: "hsl(var(--info-lighter))",
+          darker: "hsl(var(--info-darker))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -61,6 +89,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Brand colors
+        cream: "hsl(var(--color-cream))",
+        "light-blue": "hsl(var(--color-light-blue))",
+        blue: "hsl(var(--color-blue))",
+        purple: "hsl(var(--color-purple))",
+        yellow: "hsl(var(--color-yellow))",
       },
       keyframes: {
         "accordion-down": {
