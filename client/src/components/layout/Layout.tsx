@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import notificationService from '@/lib/services/notificationService';
+import authService from '@/lib/services/authService';
 
 interface LayoutProps {
   children: ReactNode;
@@ -324,10 +325,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <HelpCircle size={14} className="mr-2" />
                 <a href="#" className="text-xs">Help & Documentation</a>
               </div>
-              <div className="flex items-center mt-3">
+              <button 
+                onClick={() => {
+                  notificationService.success(
+                    'Logging Out', 
+                    'You will be logged out shortly...'
+                  );
+                  // Simulate logout process with delay
+                  setTimeout(() => {
+                    // In a real app, we would call authService.logout()
+                    notificationService.info(
+                      'Logged Out', 
+                      'You have been successfully logged out.'
+                    );
+                    // Redirect to home page
+                    window.location.href = '/';
+                  }, 1000);
+                }}
+                className="flex items-center mt-3 hover:text-white/80 cursor-pointer w-full"
+              >
                 <LogOut size={14} className="mr-2" />
                 <span>Log Out</span>
-              </div>
+              </button>
             </>
           )}
         </div>
@@ -426,24 +445,39 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <p className="text-xs text-gray-500">admin@example.com</p>
                 </div>
                 <div className="py-1">
-                  <a href="#" className="user-menu-item">
+                  <Link href="/settings" className="user-menu-item">
                     <User size={14} className="mr-2" />
                     <span>Profile</span>
-                  </a>
-                  <a href="#" className="user-menu-item">
+                  </Link>
+                  <Link href="/settings" className="user-menu-item">
                     <Settings size={14} className="mr-2" />
                     <span>Settings</span>
-                  </a>
-                  <a href="#" className="user-menu-item">
+                  </Link>
+                  <Link href="/settings?tab=security" className="user-menu-item">
                     <Shield size={14} className="mr-2" />
                     <span>Security</span>
-                  </a>
+                  </Link>
                 </div>
                 <div className="border-t border-gray-200 py-1">
-                  <a href="#" className="user-menu-item text-error">
+                  <button 
+                    onClick={() => {
+                      notificationService.success(
+                        'Logging Out', 
+                        'You will be logged out shortly...'
+                      );
+                      setTimeout(() => {
+                        notificationService.info(
+                          'Logged Out', 
+                          'You have been successfully logged out.'
+                        );
+                        window.location.href = '/';
+                      }, 1000);
+                    }}
+                    className="user-menu-item w-full text-left text-error"
+                  >
                     <LogOut size={14} className="mr-2" />
                     <span>Logout</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>

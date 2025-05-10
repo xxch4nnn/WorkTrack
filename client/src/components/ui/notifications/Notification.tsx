@@ -9,12 +9,19 @@ import {
 
 type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
+type NotificationAction = {
+  label: string;
+  onClick: () => void;
+  style?: 'primary' | 'secondary' | 'danger';
+};
+
 interface NotificationProps {
   id: string;
   type: NotificationType;
   title: string;
   message: string;
   duration?: number;
+  actions?: NotificationAction[];
   onClose: (id: string) => void;
 }
 
