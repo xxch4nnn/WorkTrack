@@ -457,13 +457,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         'Logging Out', 
                         'You will be logged out shortly...'
                       );
-                      setTimeout(() => {
-                        notificationService.info(
-                          'Logged Out', 
-                          'You have been successfully logged out.'
-                        );
-                        window.location.href = '/';
-                      }, 1000);
+                      // Actual logout process
+                      authService.logout();
                     }}
                     className="user-menu-item w-full text-left text-error"
                   >

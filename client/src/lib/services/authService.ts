@@ -2,6 +2,12 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { User, InsertUser } from '@shared/schema';
 import notificationService from './notificationService';
 
+// Define error type for better error handling
+interface ApiError {
+  message?: string;
+  [key: string]: any;
+}
+
 /**
  * Authentication service for handling user login, logout, and registration
  */
@@ -28,10 +34,11 @@ class AuthService {
       );
       
       return userData;
-    } catch (error) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       notificationService.error(
         'Login Failed', 
-        error.message || 'Unable to login. Please try again.'
+        apiError.message || 'Unable to login. Please try again.'
       );
       return null;
     }
