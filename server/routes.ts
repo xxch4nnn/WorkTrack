@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { format } from "date-fns";
@@ -10,8 +10,27 @@ import {
   insertActivitySchema,
 } from "@shared/schema";
 import { calculateRegularHours } from "../client/src/lib/utils/dateUtils";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes and middleware
+  setupAuth(app);
+  
+  // Middleware to check if user is authenticated
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ error: "Authentication required" });
+  };
+  
+  // Middleware to check if user is an admin
+  const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && req.user?.role === "Admin") {
+      return next();
+    }
+    res.status(403).json({ error: "Admin access required" });
+  };
   // Helper middleware for validating requests
   const validateRequest = (schema: any) => {
     return (req: any, res: any, next: any) => {
@@ -38,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Employee endpoints
-  app.get("/api/employees", async (req, res) => {
+  app.get("/api/employees", isAuthenticated, async (req, res) => {
     try {
       const employees = await storage.getAllEmployees();
       res.json(employees);
@@ -348,6 +367,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedDTR);
     } catch (error) {
       res.status(500).json({ message: "Failed to request DTR revision" });
+    }
+  });
+  
+  // Bulk DTR operations
+  app.post("/api/dtrs/bulk/approve", async (req, res) => {
+    try {
+      const { dtrIds } = req.body;
+      
+      if (!dtrIds || !Array.isArray(dtrIds) || dtrIds.length === 0) {
+        return res.status(400).json({ message: "No DTR IDs provided" });
+      }
+      
+      const results = [];
+      const errors = [];
+      
+      for (const dtrId of dtrIds) {
+        try {
+          const dtr = await storage.getDTR(dtrId);
+          if (!dtr) {
+            errors.push({ id: dtrId, message: "DTR not found" });
+            continue;
+          }
+          
+          if (dtr.status !== "Pending") {
+            errors.push({ id: dtrId, message: "DTR must be in Pending status to approve" });
+            continue;
+          }
+          
+          const updatedDTR = await storage.updateDTR(dtrId, {
+            ...dtr,
+            status: "Approved",
+            approvedBy: 1, // Admin user ID
+            approvalDate: format(new Date(), "yyyy-MM-dd")
+          });
+          
+          const employee = await storage.getEmployee(dtr.employeeId);
+          const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : `Employee #${dtr.employeeId}`;
+          
+          await logActivity(1, "dtr_approved", `DTR approved for ${employeeName} - ${dtr.date}`);
+          results.push(updatedDTR);
+        } catch (error) {
+          errors.push({ id: dtrId, message: "Failed to process" });
+        }
+      }
+      
+      await logActivity(1, "bulk_dtr_approved", `${results.length} DTRs approved in bulk`);
+      res.json({
+        success: true,
+        processed: results.length,
+        total: dtrIds.length,
+        results,
+        errors
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process bulk DTR approval" });
+    }
+  });
+  
+  app.post("/api/dtrs/bulk/reject", async (req, res) => {
+    try {
+      const { dtrIds } = req.body;
+      
+      if (!dtrIds || !Array.isArray(dtrIds) || dtrIds.length === 0) {
+        return res.status(400).json({ message: "No DTR IDs provided" });
+      }
+      
+      const results = [];
+      const errors = [];
+      
+      for (const dtrId of dtrIds) {
+        try {
+          const dtr = await storage.getDTR(dtrId);
+          if (!dtr) {
+            errors.push({ id: dtrId, message: "DTR not found" });
+            continue;
+          }
+          
+          if (dtr.status !== "Pending") {
+            errors.push({ id: dtrId, message: "DTR must be in Pending status to reject" });
+            continue;
+          }
+          
+          const updatedDTR = await storage.updateDTR(dtrId, {
+            ...dtr,
+            status: "Rejected",
+            approvedBy: 1, // Admin user ID
+            approvalDate: format(new Date(), "yyyy-MM-dd")
+          });
+          
+          const employee = await storage.getEmployee(dtr.employeeId);
+          const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : `Employee #${dtr.employeeId}`;
+          
+          await logActivity(1, "dtr_rejected", `DTR rejected for ${employeeName} - ${dtr.date}`);
+          results.push(updatedDTR);
+        } catch (error) {
+          errors.push({ id: dtrId, message: "Failed to process" });
+        }
+      }
+      
+      await logActivity(1, "bulk_dtr_rejected", `${results.length} DTRs rejected in bulk`);
+      res.json({
+        success: true,
+        processed: results.length,
+        total: dtrIds.length,
+        results,
+        errors
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process bulk DTR rejection" });
+    }
+  });
+  
+  // Bulk DTR payroll processing
+  app.post("/api/dtrs/bulk/process-payroll", async (req, res) => {
+    try {
+      const { dtrIds } = req.body;
+      
+      if (!dtrIds || !Array.isArray(dtrIds) || dtrIds.length === 0) {
+        return res.status(400).json({ message: "No DTR IDs provided" });
+      }
+      
+      const results = [];
+      const errors = [];
+      
+      for (const dtrId of dtrIds) {
+        try {
+          const dtr = await storage.getDTR(dtrId);
+          if (!dtr) {
+            errors.push({ id: dtrId, message: "DTR not found" });
+            continue;
+          }
+          
+          if (dtr.status !== "Approved") {
+            errors.push({ id: dtrId, message: "DTR must be in Approved status to process payroll" });
+            continue;
+          }
+          
+          // Mark DTR as processing
+          await storage.updateDTR(dtrId, {
+            ...dtr,
+            status: "Processing"
+          });
+          
+          // Find the employee to get the hourly rate
+          const employee = await storage.getEmployee(dtr.employeeId);
+          if (!employee) {
+            errors.push({ id: dtrId, message: "Employee not found" });
+            continue;
+          }
+          
+          const hourlyRate = employee.hourlyRate;
+          const regularHours = dtr.regularHours;
+          const overtimeHours = dtr.overtimeHours || 0;
+          
+          // Calculate pay
+          const regularPay = regularHours * hourlyRate;
+          const overtimePay = overtimeHours * hourlyRate * 1.5; // Assuming 1.5x for overtime
+          const grossPay = regularPay + overtimePay;
+          
+          // Apply standard deductions (simplified for demo)
+          const taxRate = 0.15; // 15% tax
+          const taxDeduction = grossPay * taxRate;
+          const otherDeductions = 0; // Can be customized
+          const totalDeductions = taxDeduction + otherDeductions;
+          const netPay = grossPay - totalDeductions;
+          
+          // Create a payroll record
+          const payrollData = {
+            employeeId: dtr.employeeId,
+            dtrId: dtr.id,
+            payPeriodStart: dtr.date,
+            payPeriodEnd: dtr.date,
+            regularHours: regularHours,
+            overtimeHours: overtimeHours,
+            regularPay: regularPay,
+            overtimePay: overtimePay,
+            grossPay: grossPay,
+            taxDeductions: taxDeduction,
+            otherDeductions: otherDeductions,
+            netPay: netPay,
+            status: "Processed",
+            paymentMethod: "Direct Deposit",
+            paymentDate: format(new Date(), "yyyy-MM-dd"),
+          };
+          
+          const payroll = await storage.createPayroll(payrollData);
+          results.push(payroll);
+          
+          const employeeName = `${employee.firstName} ${employee.lastName}`;
+          await logActivity(1, "payroll_processed", `Payroll processed for ${employeeName} - ${dtr.date}`);
+        } catch (error) {
+          errors.push({ id: dtrId, message: "Failed to process" });
+        }
+      }
+      
+      await logActivity(1, "bulk_payroll_processed", `${results.length} payrolls processed in bulk`);
+      res.json({
+        success: true,
+        processed: results.length,
+        total: dtrIds.length,
+        results,
+        errors
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process bulk payroll" });
     }
   });
   
@@ -851,6 +1075,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/activities/mark-read", async (req, res) => {
+    try {
+      await storage.markAllActivitiesAsRead();
+      res.status(200).json({ success: true, message: "All notifications marked as read" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark notifications as read" });
+    }
+  });
+
   // User profile
   app.get("/api/users/profile", async (req, res) => {
     try {
@@ -1020,7 +1253,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/all/clear", async (req, res) => {
     try {
       await storage.clearAll();
-      // Add back a single admin user and log the action
+      
+      // Add back admin user
       await storage.createUser({
         username: "admin",
         password: "admin123",
@@ -1028,6 +1262,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: "User",
         email: "admin@worktrack.com",
         role: "Admin",
+        status: "Active"
+      });
+      
+      // Add back staff user
+      await storage.createUser({
+        username: "staff",
+        password: "staff123",
+        firstName: "Staff",
+        lastName: "Member",
+        email: "staff@worktrack.com",
+        role: "Staff",
+        status: "Active"
+      });
+      
+      // Add back manager user
+      await storage.createUser({
+        username: "manager",
+        password: "manager123",
+        firstName: "Department",
+        lastName: "Manager",
+        email: "manager@worktrack.com",
+        role: "Manager",
         status: "Active"
       });
       

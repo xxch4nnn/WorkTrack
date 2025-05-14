@@ -1,255 +1,239 @@
-import { useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import React from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Payroll } from "@shared/schema";
-import { Download, Printer } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { PDFDownloadButton, ExcelDownloadButton } from "@/components/ui/download-button";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Download, FileText, Printer } from "lucide-react";
 
-type PayslipViewProps = {
-  payroll: Payroll;
-  employeeName: string;
-};
+interface PayslipProps {
+  payslip: {
+    id: number;
+    employeeId: number;
+    employeeName: string;
+    position?: string;
+    department?: string;
+    payPeriodStart: string;
+    payPeriodEnd: string;
+    payDate: string;
+    regularPay: number;
+    overtimePay: number;
+    holidayPay: number;
+    allowances: number;
+    bonuses: number;
+    sssDeduction: number;
+    phicDeduction: number;
+    hdmfDeduction: number;
+    taxDeduction: number;
+    otherDeductions: number;
+    loans: number;
+    cashAdvances: number;
+    grossPay: number;
+    totalDeductions: number;
+    netPay: number;
+  };
+  onClose?: () => void;
+}
 
-const PayslipView = ({ payroll, employeeName }: PayslipViewProps) => {
-  const payslipRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+const PayslipView: React.FC<PayslipProps> = ({ payslip, onClose }) => {
+  // Function to generate PDF data - would normally connect to an API
+  const generatePDF = async () => {
+    // Simulate API call by returning a placeholder
+    return "PDF_DATA"; // In a real app, this would be a base64 string or binary data from an API
+  };
 
-  // Fetch employee details
-  const { data: employee, isLoading: isEmployeeLoading } = useQuery({
-    queryKey: ['/api/employees', payroll.employeeId],
-  });
+  // Function to generate Excel data - would normally connect to an API
+  const generateExcel = async () => {
+    // Simulate API call by returning a placeholder
+    return "EXCEL_DATA"; // In a real app, this would be a base64 string or binary data from an API
+  };
 
-  // Fetch company details
-  const { data: company, isLoading: isCompanyLoading } = useQuery({
-    queryKey: ['/api/companies', employee?.companyId],
-    enabled: !!employee?.companyId,
-  });
-
+  // Handle printing
   const handlePrint = () => {
-    if (payslipRef.current) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write('<html><head><title>Payslip</title>');
-        printWindow.document.write('<style>');
-        printWindow.document.write(`
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .payslip { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; }
-          .payslip-header { text-align: center; margin-bottom: 20px; }
-          .company-name { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-          .payslip-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-          .section { margin-bottom: 20px; }
-          .section-title { font-weight: bold; margin-bottom: 10px; }
-          .row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-          .total-row { font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; }
-          .separator { border-top: 1px solid #ddd; margin: 15px 0; }
-          @media print {
-            body { padding: 0; }
-            .payslip { border: none; }
-          }
-        `);
-        printWindow.document.write('</style></head><body>');
-        printWindow.document.write(payslipRef.current.innerHTML);
-        printWindow.document.write('</body></html>');
-        
-        printWindow.document.close();
-        printWindow.focus();
-        
-        // Add slight delay to ensure content is loaded
-        setTimeout(() => {
-          printWindow.print();
-          // printWindow.close();
-        }, 250);
-      } else {
-        toast({
-          title: "Print Error",
-          description: "Unable to open print window. Please check your browser settings.",
-          variant: "destructive",
-        });
-      }
-    }
+    window.print();
   };
-
-  const generatePDF = () => {
-    try {
-      toast({
-        title: "Download Started",
-        description: "Your payslip PDF is being prepared for download.",
-      });
-      
-      // In a real app, this would call the server to generate the PDF
-      // For now, we'll simulate a download by using the print functionality
-      handlePrint();
-    } catch (error) {
-      toast({
-        title: "Download Failed",
-        description: "Failed to download PDF. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isEmployeeLoading || isCompanyLoading) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Loading Payslip...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="space-y-3">
-              {Array(10).fill(0).map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded w-full"></div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={handlePrint}>
-          <Printer className="mr-2 h-4 w-4" />
-          Print
-        </Button>
-        <Button onClick={generatePDF}>
-          <Download className="mr-2 h-4 w-4" />
-          Download PDF
-        </Button>
-      </div>
-
-      <Card className="w-full max-w-4xl mx-auto">
-        <div ref={payslipRef} className="payslip">
-          <CardHeader className="text-center payslip-header">
-            <CardTitle className="company-name">{company?.name || "WorkTrack Inc."}</CardTitle>
-            <p className="text-gray-500">{company?.address || "123 Business Street, City"}</p>
-            <div className="mt-4 payslip-title">Employee Payslip</div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 section">
-                <h3 className="font-medium section-title">Employee Information</h3>
-                <div className="row">
-                  <span className="text-gray-500">Name:</span>
-                  <span>{employeeName}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Position:</span>
-                  <span>{employee?.position || "N/A"}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Department:</span>
-                  <span>{employee?.department || "N/A"}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Employee ID:</span>
-                  <span>{employee?.id || "N/A"}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 section">
-                <h3 className="font-medium section-title">Payroll Information</h3>
-                <div className="row">
-                  <span className="text-gray-500">Pay Period:</span>
-                  <span>{payroll.payPeriodStart} to {payroll.payPeriodEnd}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Pay Date:</span>
-                  <span>{payroll.processedDate || "Pending"}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Payroll #:</span>
-                  <span>PR-{payroll.id.toString().padStart(6, '0')}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Status:</span>
-                  <span>{payroll.status}</span>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="my-6 separator" />
-
-            <div className="space-y-6">
-              <div className="space-y-3 section">
-                <h3 className="font-medium section-title">Earnings</h3>
-                <div className="row">
-                  <span className="text-gray-500">Regular Hours:</span>
-                  <span>{payroll.totalRegularHours} hrs</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Hourly Rate:</span>
-                  <span>₱{employee?.hourlyRate?.toFixed(2) || "0.00"}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">Regular Pay:</span>
-                  <span>₱{(payroll.totalRegularHours * (employee?.hourlyRate || 0)).toFixed(2)}</span>
-                </div>
-                {payroll.totalOvertimeHours > 0 && (
-                  <>
-                    <div className="row">
-                      <span className="text-gray-500">Overtime Hours:</span>
-                      <span>{payroll.totalOvertimeHours} hrs</span>
-                    </div>
-                    <div className="row">
-                      <span className="text-gray-500">Overtime Rate:</span>
-                      <span>₱{((employee?.hourlyRate || 0) * 1.25).toFixed(2)}</span>
-                    </div>
-                    <div className="row">
-                      <span className="text-gray-500">Overtime Pay:</span>
-                      <span>₱{(payroll.totalOvertimeHours * (employee?.hourlyRate || 0) * 1.25).toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-                <div className="row total-row">
-                  <span>Gross Pay:</span>
-                  <span>₱{payroll.grossPay.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="space-y-3 section">
-                <h3 className="font-medium section-title">Deductions</h3>
-                <div className="row">
-                  <span className="text-gray-500">Tax:</span>
-                  <span>₱{(payroll.totalDeductions * 0.6).toFixed(2)}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">SSS Contribution:</span>
-                  <span>₱{(payroll.totalDeductions * 0.25).toFixed(2)}</span>
-                </div>
-                <div className="row">
-                  <span className="text-gray-500">PhilHealth:</span>
-                  <span>₱{(payroll.totalDeductions * 0.15).toFixed(2)}</span>
-                </div>
-                <div className="row total-row">
-                  <span>Total Deductions:</span>
-                  <span>₱{payroll.totalDeductions.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <Separator className="separator" />
-
-              <div className="row total-row">
-                <span className="text-lg font-bold">Net Pay:</span>
-                <span className="text-lg font-bold">₱{payroll.netPay.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="mt-10 pt-10 border-t text-center text-sm text-gray-500">
-              <p>This is a computer-generated document. No signature is required.</p>
-              <p>For questions about this payslip, please contact the HR department.</p>
-            </div>
-          </CardContent>
+    <Card className="w-full max-w-4xl mx-auto print:shadow-none">
+      <CardHeader className="print:py-2">
+        <div className="flex justify-between items-start print:flex-col">
+          <div>
+            <CardTitle className="text-2xl font-bold text-primary">PAYSLIP</CardTitle>
+            <CardDescription>
+              Pay Period: {formatDate(payslip.payPeriodStart)} - {formatDate(payslip.payPeriodEnd)}
+            </CardDescription>
+          </div>
+          <div className="flex space-x-2 print:hidden">
+            <PDFDownloadButton 
+              filename={`payslip-${payslip.employeeName}-${payslip.payPeriodEnd}.pdf`}
+              data={generatePDF}
+            >
+              PDF
+            </PDFDownloadButton>
+            <ExcelDownloadButton 
+              filename={`payslip-${payslip.employeeName}-${payslip.payPeriodEnd}.xlsx`}
+              data={generateExcel}
+            >
+              Excel
+            </ExcelDownloadButton>
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-1" />
+              Print
+            </Button>
+            {onClose && (
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Close
+              </Button>
+            )}
+          </div>
         </div>
-      </Card>
-    </div>
+      </CardHeader>
+      <CardContent className="space-y-6 print:space-y-3 print:py-2">
+        {/* Employee Information */}
+        <div className="grid grid-cols-2 gap-4 print:gap-2">
+          <div>
+            <p className="text-sm font-semibold">Employee</p>
+            <p className="text-lg font-bold">{payslip.employeeName}</p>
+            <p className="text-sm text-gray-500">{payslip.position || 'Not specified'}</p>
+            <p className="text-sm text-gray-500">{payslip.department || 'Not specified'}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-semibold">Pay Date</p>
+            <p className="text-base">{formatDate(payslip.payDate)}</p>
+            <p className="text-sm font-semibold mt-1">Employee ID</p>
+            <p className="text-base">{payslip.employeeId}</p>
+          </div>
+        </div>
+
+        <Separator className="my-4 print:my-2" />
+
+        {/* Earnings and Deductions Table */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:gap-2">
+          {/* Earnings */}
+          <div>
+            <h3 className="font-semibold mb-2">Earnings</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Regular Pay</TableCell>
+                  <TableCell className="text-right">{formatCurrency(payslip.regularPay)}</TableCell>
+                </TableRow>
+                {payslip.overtimePay > 0 && (
+                  <TableRow>
+                    <TableCell>Overtime Pay</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.overtimePay)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.holidayPay > 0 && (
+                  <TableRow>
+                    <TableCell>Holiday Pay</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.holidayPay)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.allowances > 0 && (
+                  <TableRow>
+                    <TableCell>Allowances</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.allowances)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.bonuses > 0 && (
+                  <TableRow>
+                    <TableCell>Bonuses</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.bonuses)}</TableCell>
+                  </TableRow>
+                )}
+                <TableRow className="font-bold bg-gray-50">
+                  <TableCell>Gross Pay</TableCell>
+                  <TableCell className="text-right">{formatCurrency(payslip.grossPay)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Deductions */}
+          <div>
+            <h3 className="font-semibold mb-2">Deductions</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payslip.sssDeduction > 0 && (
+                  <TableRow>
+                    <TableCell>SSS Contribution</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.sssDeduction)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.phicDeduction > 0 && (
+                  <TableRow>
+                    <TableCell>PhilHealth Contribution</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.phicDeduction)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.hdmfDeduction > 0 && (
+                  <TableRow>
+                    <TableCell>Pag-IBIG Contribution</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.hdmfDeduction)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.taxDeduction > 0 && (
+                  <TableRow>
+                    <TableCell>Withholding Tax</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.taxDeduction)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.loans > 0 && (
+                  <TableRow>
+                    <TableCell>Loans</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.loans)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.cashAdvances > 0 && (
+                  <TableRow>
+                    <TableCell>Cash Advances</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.cashAdvances)}</TableCell>
+                  </TableRow>
+                )}
+                {payslip.otherDeductions > 0 && (
+                  <TableRow>
+                    <TableCell>Other Deductions</TableCell>
+                    <TableCell className="text-right">{formatCurrency(payslip.otherDeductions)}</TableCell>
+                  </TableRow>
+                )}
+                <TableRow className="font-bold bg-gray-50">
+                  <TableCell>Total Deductions</TableCell>
+                  <TableCell className="text-right">{formatCurrency(payslip.totalDeductions)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Net Pay Summary */}
+        <div className="bg-primary/10 p-4 rounded-md mt-4 print:mt-2">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold">Net Pay</h3>
+            <p className="text-2xl font-bold text-primary">{formatCurrency(payslip.netPay)}</p>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="text-sm text-gray-500 border-t print:pt-2 print:text-xs">
+        <div className="w-full">
+          <p className="mb-1">This is a computer-generated document. No signature is required.</p>
+          <p>For questions about this payslip, please contact the HR department.</p>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 

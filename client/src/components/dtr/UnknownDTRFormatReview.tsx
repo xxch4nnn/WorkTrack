@@ -146,10 +146,51 @@ const UnknownDTRFormatReview = () => {
     setExtractionRules(newRules);
   };
 
+  const handleGoBack = () => {
+    if (typeof window !== 'undefined') {
+      // Standalone component behavior - go back in history
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Default fallback is dashboard
+        window.location.href = '/';
+      }
+    }
+  };
+
+  // Detect if used as a standalone component or within DTR Format Management
+  // This is for demonstration only - in a real implementation, we would use props
+  const isStandalone = window.location.pathname.includes('unknown-dtr-formats');
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold">Unknown DTR Format Review</h3>
+        <div className="flex items-center space-x-4">
+          {/* Only show back button if this is a standalone page */}
+          {isStandalone && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGoBack}
+              className="h-8 w-8 p-0"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span className="sr-only">Back</span>
+            </Button>
+          )}
+          <h3 className="text-xl font-bold">Unknown DTR Format Review</h3>
+        </div>
       </div>
 
       {isLoading ? (

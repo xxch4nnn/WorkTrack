@@ -91,80 +91,13 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull().unique(),
-  role: text("role").notNull(), // Admin, Manager, Employee
+  role: text("role").notNull(), // Admin, Manager, Staff
   status: text("status").notNull(), // Active, Inactive
-  permissions: json("permissions"), // Custom permissions JSON object
-  managedCompanyIds: json("managed_company_ids"), // Array of company IDs (for Managers)
-  lastLogin: timestamp("last_login"),
-  createdAt: timestamp("created_at").defaultNow(),
-  avatar: text("avatar"), // URL or base64 of user avatar
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
-  lastLogin: true,
-  createdAt: true,
 });
-
-// Role definitions and permission types
-export const UserRoles = {
-  ADMIN: 'Admin',
-  MANAGER: 'Manager',
-  EMPLOYEE: 'Employee',
-} as const;
-
-export const PermissionTypes = {
-  VIEW: 'view',
-  CREATE: 'create',
-  EDIT: 'edit',
-  DELETE: 'delete',
-  APPROVE: 'approve',
-} as const;
-
-export const ResourceTypes = {
-  EMPLOYEES: 'employees',
-  COMPANIES: 'companies',
-  DTRS: 'dtrs',
-  PAYROLLS: 'payrolls',
-  REPORTS: 'reports',
-  SETTINGS: 'settings',
-  DTR_FORMATS: 'dtr_formats',
-  USERS: 'users',
-} as const;
-
-// Default role permissions
-export const DefaultPermissions = {
-  [UserRoles.ADMIN]: {
-    [ResourceTypes.EMPLOYEES]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE],
-    [ResourceTypes.COMPANIES]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE],
-    [ResourceTypes.DTRS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE, PermissionTypes.APPROVE],
-    [ResourceTypes.PAYROLLS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE, PermissionTypes.APPROVE],
-    [ResourceTypes.REPORTS]: [PermissionTypes.VIEW, PermissionTypes.CREATE],
-    [ResourceTypes.SETTINGS]: [PermissionTypes.VIEW, PermissionTypes.EDIT],
-    [ResourceTypes.DTR_FORMATS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE],
-    [ResourceTypes.USERS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.DELETE],
-  },
-  [UserRoles.MANAGER]: {
-    [ResourceTypes.EMPLOYEES]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT],
-    [ResourceTypes.COMPANIES]: [PermissionTypes.VIEW],
-    [ResourceTypes.DTRS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.EDIT, PermissionTypes.APPROVE],
-    [ResourceTypes.PAYROLLS]: [PermissionTypes.VIEW, PermissionTypes.CREATE, PermissionTypes.APPROVE],
-    [ResourceTypes.REPORTS]: [PermissionTypes.VIEW, PermissionTypes.CREATE],
-    [ResourceTypes.SETTINGS]: [PermissionTypes.VIEW],
-    [ResourceTypes.DTR_FORMATS]: [PermissionTypes.VIEW],
-    [ResourceTypes.USERS]: [PermissionTypes.VIEW],
-  },
-  [UserRoles.EMPLOYEE]: {
-    [ResourceTypes.EMPLOYEES]: [PermissionTypes.VIEW],
-    [ResourceTypes.COMPANIES]: [PermissionTypes.VIEW],
-    [ResourceTypes.DTRS]: [PermissionTypes.VIEW, PermissionTypes.CREATE],
-    [ResourceTypes.PAYROLLS]: [PermissionTypes.VIEW],
-    [ResourceTypes.REPORTS]: [PermissionTypes.VIEW],
-    [ResourceTypes.SETTINGS]: [],
-    [ResourceTypes.DTR_FORMATS]: [],
-    [ResourceTypes.USERS]: [],
-  },
-};
 
 // DTR Format table (for storing OCR recognition patterns)
 export const dtrFormats = pgTable("dtr_formats", {
@@ -208,10 +141,12 @@ export const activities = pgTable("activities", {
   action: text("action").notNull(),
   description: text("description").notNull(),
   timestamp: text("timestamp").notNull(),
+  isRead: boolean("is_read").default(false),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
+  isRead: true,
 });
 
 // Define the types
